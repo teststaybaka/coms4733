@@ -16,6 +16,8 @@ function finalRad = hw1_sim(serPort)
         if ~firstBumped
             if bumped
                 firstBumped = true;
+                DistanceSensorRoomba(serPort);
+                AngleSensorRoomba(serPort);
                 x = 0;
                 y = 0;
                 angle = 0;
@@ -62,7 +64,7 @@ function finalRad = hw1_sim(serPort)
                     disp([x, y, dist, angle]);
                     turnAngle(serPort, 0.1, 10);
                 else
-                    if count > 0.2
+                    if count > 0.1
                         count = 0;
                         current_state = 1;
                         dist = DistanceSensorRoomba(serPort);
