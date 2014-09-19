@@ -1,3 +1,14 @@
+% COMS 4733 - Computational Aspect of Robotics
+%
+%	Columbia University FALL 2014 
+%	Group   : 19
+%	Members : Xusheng Gao 				(xg2193)
+%		  Yuxuan Xie 				()
+%		  Zachary Hideichi Watanabe-Gastel	(zhw2102)
+%
+%	Homework Assignment 1
+%	Using the iRobot Create Matlab Simulator and the iRobot Create
+
 function finalRad = hw1_sim(serPort)
     
     maxDuration = 2400;
