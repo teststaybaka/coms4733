@@ -1,7 +1,7 @@
 % COMS 4733 - Computational Aspect of Robotics
 %
 %	Columbia University FALL 2014 
-%	Group   : 19
+%	Team    : 19
 %	Members : Xusheng Gao 				(xg2193)
 %		  Yuxuan Xie 				()
 %		  Zachary Hideichi Watanabe-Gastel	(zhw2102)
