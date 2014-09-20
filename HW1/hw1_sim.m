@@ -5,7 +5,7 @@
 %
 %	Team    : 19
 %	Members : Xusheng Gao 				        (xg2193)
-%		      Yuxuan Xie 				        ()
+%		      Yuxuan Xie 				        (yx2284)
 %		      Zachary Hideichi Watanabe-Gastel	(zhw2102)
 %
 %	Homework Assignment 1
