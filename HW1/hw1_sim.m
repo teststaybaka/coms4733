@@ -21,17 +21,18 @@ function finalRad = hw1_sim(serPort)
     time = tic;
     firstBumped = false;
     
-    forward_velocity = 0.1;
-    forwad_step = 0;
+    forward_velocity = 0.05;
+    forward_step = 0;
     current_state = 0;
     time_step = 0.2;
     turn_step = 0;
     angle_accu = 0;
     
     while toc(time) < maxDuration
+        SetFwdVelRadiusRoomba(serPort, 0.0, inf);
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
-        SetFwdVelRadiusRoomba(serPort, 0.0, inf);
+        hasWall = WallSensorReadRoomba(serPort);
         
         if ~firstBumped
             if bumped
@@ -41,77 +42,40 @@ function finalRad = hw1_sim(serPort)
                 x = 0;
                 y = 0;
                 angle = 0;
-                turnAngle(serPort, 0.1, 30);
+                bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
             else
                 SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             end
         else
-            if current_state == 0
-                if bumped
-                    forwad_step = 0;
-                    dist = DistanceSensorRoomba(serPort);
-                    distTravel = distTravel + dist;
-                    angle = angle + AngleSensorRoomba(serPort);
-                    x = x + dist*cos(angle);
-                    y = y + dist*sin(angle);
-                    disp([x, y, angle, dist]);
-                    turnAngle(serPort, 0.1, 30);
-                else
-                    if forwad_step > 15*time_step
-                        forwad_step = 0;
-                        current_state = 1;
-                        dist = DistanceSensorRoomba(serPort);
-                        distTravel = distTravel + dist;
-                        angle = angle + AngleSensorRoomba(serPort);
-                        x = x + dist*cos(angle);
-                        y = y + dist*sin(angle);
-                        disp([x, y, angle, dist]);
-                        turnAngle(serPort, 0.1, -30);
-                    else
-                        forwad_step = forwad_step + time_step;
-                        dist = DistanceSensorRoomba(serPort);
-                        distTravel = distTravel + dist;
-                        angle = angle + AngleSensorRoomba(serPort);
-                        x = x + dist*cos(angle);
-                        y = y + dist*sin(angle);
-                        disp([x, y, angle, dist]);
-                        SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                    end
-                end
+            if bumped
+                forward_step = 0;
+                dist = DistanceSensorRoomba(serPort);
+                distTravel = distTravel + dist;
+                angle = angle + AngleSensorRoomba(serPort);
+                x = x + dist*cos(angle);
+                y = y + dist*sin(angle);
+                disp([x, y, angle, dist]);
+                bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
             else
-                if bumped
-                    current_state = 0;
-                    forwad_step = 0;
-                    turn_step = 0;
-                    angle_accu = 0;
+                if ~hasWall
+                    disp('no wall');
+                    forward_step = 0;
                     dist = DistanceSensorRoomba(serPort);
                     distTravel = distTravel + dist;
                     angle = angle + AngleSensorRoomba(serPort);
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
                     disp([x, y, angle, dist]);
-                    turnAngle(serPort, 0.1, 30);
+                    turnAngle(serPort, 0.1, -30);
                 else
-                    if forwad_step > 4*time_step
-                        forwad_step = 0;
-                        turn_step = turn_step + 1;
-                        dist = DistanceSensorRoomba(serPort);
-                        distTravel = distTravel + dist;
-                        angle = angle + AngleSensorRoomba(serPort);
-                        x = x + dist*cos(angle);
-                        y = y + dist*sin(angle);
-                        disp([x, y, angle, dist]);
-                        turnAngle(serPort, 0.1, -30);
-                    else
-                        forwad_step = forwad_step + time_step;
-                        dist = DistanceSensorRoomba(serPort);
-                        distTravel = distTravel + dist;
-                        angle = angle + AngleSensorRoomba(serPort);
-                        x = x + dist*cos(angle);
-                        y = y + dist*sin(angle);
-                        disp([x, y, angle, dist]);
-                        SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                    end
+                    %forward_step = forward_step + time_step;
+                    dist = DistanceSensorRoomba(serPort);
+                    distTravel = distTravel + dist;
+                    angle = angle + AngleSensorRoomba(serPort);
+                    x = x + dist*cos(angle);
+                    y = y + dist*sin(angle);
+                    disp([x, y, angle, dist]);
+                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 end
             end
             % first bumped check
@@ -120,3 +84,12 @@ function finalRad = hw1_sim(serPort)
     end
 end
 
+function bump_turn(serPort, BumpRight, BumpLeft, BumpFront)
+    if BumpRight
+        turnAngle(serPort, 0.1, 15);
+    elseif BumpLeft
+        turnAngle(serPort, 0.1, 105);
+    elseif BumpFront
+        turnAngle(serPort, 0.1, 90);
+    end
+end
