@@ -17,18 +17,21 @@ function finalRad = hw1_sim(serPort)
     robotRadius = 0.2;
     maxDuration = 30000;
     distTravel = 0;
-    deviation = 0.01;
+    deviation = 0.05;
     time = tic;
     firstBumped = false;
     
     forward_velocity = 0.05;
     forward_step = 0;
     current_state = 0;
-    time_step = 0.2;
+    time_step = 0.4;
     turn_step = 0;
     angle_accu = 0;
+    x = 0;
+    y = 0;
+    angle = 0;
     
-    while toc(time) < maxDuration
+    while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel*deviation, 2))
         SetFwdVelRadiusRoomba(serPort, 0.0, inf);
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
@@ -39,10 +42,8 @@ function finalRad = hw1_sim(serPort)
                 firstBumped = true;
                 DistanceSensorRoomba(serPort);
                 AngleSensorRoomba(serPort);
-                x = 0;
-                y = 0;
-                angle = 0;
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
+                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             else
                 SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             end
@@ -56,6 +57,7 @@ function finalRad = hw1_sim(serPort)
                 y = y + dist*sin(angle);
                 disp([x, y, angle, dist]);
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
+                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             else
                 if ~hasWall
                     disp('no wall');
@@ -67,6 +69,7 @@ function finalRad = hw1_sim(serPort)
                     y = y + dist*sin(angle);
                     disp([x, y, angle, dist]);
                     turnAngle(serPort, 0.1, -30);
+                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 else
                     %forward_step = forward_step + time_step;
                     dist = DistanceSensorRoomba(serPort);
@@ -82,6 +85,7 @@ function finalRad = hw1_sim(serPort)
         end
         pause(time_step);
     end
+    SetFwdVelRadiusRoomba(serPort, 0.0, inf);
 end
 
 function bump_turn(serPort, BumpRight, BumpLeft, BumpFront)
