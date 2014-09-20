@@ -21,7 +21,7 @@ function finalRad = hw1_sim(serPort)
     time = tic;
     firstBumped = false;
     
-    forward_velocity = 0.05;
+    forward_velocity = 0.1;
     forward_step = 0;
     current_state = 0;
     time_step = 0.4;
@@ -32,59 +32,77 @@ function finalRad = hw1_sim(serPort)
     angle = 0;
     
     while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel*deviation, 2))
-        SetFwdVelRadiusRoomba(serPort, 0.0, inf);
+        
+        pause(time_step);
+        
+        %SetFwdVelRadiusRoomba(serPort, 0.0, inf);
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
-        hasWall = WallSensorReadRoomba(serPort);
+        
+        %this is an epic fail sensor, need a perfect perpendicular >"<
+        %hasWall = WallSensorReadRoomba(serPort);
         
         if ~firstBumped
             if bumped
                 firstBumped = true;
+                
+                %set point for distance and angle variable (reference point)
                 DistanceSensorRoomba(serPort);
                 AngleSensorRoomba(serPort);
+                
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
-                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             else
                 SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             end
         else
             if bumped
                 forward_step = 0;
+                % distance from last position
                 dist = DistanceSensorRoomba(serPort);
+                
+                %calculating new parameters
                 distTravel = distTravel + dist;
                 angle = angle + AngleSensorRoomba(serPort);
                 x = x + dist*cos(angle);
                 y = y + dist*sin(angle);
-                disp([x, y, angle, dist]);
+                
+                fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                fprintf('Turning State \n\n');
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
-                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             else
-                if ~hasWall
-                    disp('no wall');
+                if forward_step >= (3 * time_step)
                     forward_step = 0;
+                    % distance from last position
                     dist = DistanceSensorRoomba(serPort);
+                    
+                    %calculating new parameters
                     distTravel = distTravel + dist;
                     angle = angle + AngleSensorRoomba(serPort);
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
-                    disp([x, y, angle, dist]);
+                    
+                    fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                    fprintf('Turning State \n\n');
                     turnAngle(serPort, 0.1, -30);
-                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 else
-                    %forward_step = forward_step + time_step;
+                    forward_step = forward_step + time_step;
+                    % distance from last position
                     dist = DistanceSensorRoomba(serPort);
+                    
+                    %calculating new parameters
                     distTravel = distTravel + dist;
                     angle = angle + AngleSensorRoomba(serPort);
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
-                    disp([x, y, angle, dist]);
+                    
+                    fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                    fprintf('Moving State \n\n');
                     SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 end
-            end
-            % first bumped check
-        end
-        pause(time_step);
-    end
+            end  % roomba movement
+        end % first bumped check        
+    end %end of while loop
+    
     SetFwdVelRadiusRoomba(serPort, 0.0, inf);
 end
 
