@@ -14,23 +14,24 @@
 
 function finalRad = hw1_sim(serPort)
     
-    maxDuration = 2400;
+    robotRadius = 0.2;
+    maxDuration = 30000;
     distTravel = 0;
     deviation = 0.01;
     time = tic;
     firstBumped = false;
-    % START!!!
-    SetFwdVelRadiusRoomba(serPort, 0.2, inf);
+    
+    forward_velocity = 0.1;
     forwad_step = 0;
     current_state = 0;
-    time_step = 0.02;
+    time_step = 0.2;
     turn_step = 0;
     angle_accu = 0;
     
     while toc(time) < maxDuration
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-     
         bumped = BumpRight || BumpLeft || BumpFront;
+        SetFwdVelRadiusRoomba(serPort, 0.0, inf);
         
         if ~firstBumped
             if bumped
@@ -40,7 +41,9 @@ function finalRad = hw1_sim(serPort)
                 x = 0;
                 y = 0;
                 angle = 0;
-                turnAngle(serPort, 0.2, 10);
+                turnAngle(serPort, 0.1, 30);
+            else
+                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
             end
         else
             if current_state == 0
@@ -52,7 +55,7 @@ function finalRad = hw1_sim(serPort)
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
                     disp([x, y, angle, dist]);
-                    turnAngle(serPort, 0.2, 10);
+                    turnAngle(serPort, 0.1, 30);
                 else
                     if forwad_step > 15*time_step
                         forwad_step = 0;
@@ -63,7 +66,7 @@ function finalRad = hw1_sim(serPort)
                         x = x + dist*cos(angle);
                         y = y + dist*sin(angle);
                         disp([x, y, angle, dist]);
-                        turnAngle(serPort, 0.2, -10);
+                        turnAngle(serPort, 0.1, -30);
                     else
                         forwad_step = forwad_step + time_step;
                         dist = DistanceSensorRoomba(serPort);
@@ -72,7 +75,7 @@ function finalRad = hw1_sim(serPort)
                         x = x + dist*cos(angle);
                         y = y + dist*sin(angle);
                         disp([x, y, angle, dist]);
-                        SetFwdVelRadiusRoomba(serPort, 0.2, inf);
+                        SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                     end
                 end
             else
@@ -87,7 +90,7 @@ function finalRad = hw1_sim(serPort)
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
                     disp([x, y, angle, dist]);
-                    turnAngle(serPort, 0.2, 10);
+                    turnAngle(serPort, 0.1, 30);
                 else
                     if forwad_step > 4*time_step
                         forwad_step = 0;
@@ -98,15 +101,7 @@ function finalRad = hw1_sim(serPort)
                         x = x + dist*cos(angle);
                         y = y + dist*sin(angle);
                         disp([x, y, angle, dist]);
-                        if angle_accu + 10*turn_step > 180
-                            a = 180 - angle_accu;
-                            angle_accu = 180;
-                        else
-                            a = 10*turn_step;
-                            angle_accu = angle_accu + a;
-                        end
-                        disp([angle_accu, a]);
-                        turnAngle(serPort, 0.2, -a);
+                        turnAngle(serPort, 0.1, -30);
                     else
                         forwad_step = forwad_step + time_step;
                         dist = DistanceSensorRoomba(serPort);
@@ -115,7 +110,7 @@ function finalRad = hw1_sim(serPort)
                         x = x + dist*cos(angle);
                         y = y + dist*sin(angle);
                         disp([x, y, angle, dist]);
-                        SetFwdVelRadiusRoomba(serPort, 0.2, inf);
+                        SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                     end
                 end
             end
