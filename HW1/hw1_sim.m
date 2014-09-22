@@ -61,8 +61,10 @@ function finalRad = hw1_sim(serPort)
                     next_state = MOVING;
                 else
                     SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                    next_state = INITIAL
+                    next_state = INITIAL;
                 end
+                
+                fprintf('initial state\n');
                 
             case MOVING
                 
@@ -92,6 +94,8 @@ function finalRad = hw1_sim(serPort)
                     end
                 end
                 
+                fprintf('moving state\n');
+                
             case TURNING
                 
                 forward_step = 0;
@@ -119,7 +123,9 @@ function finalRad = hw1_sim(serPort)
                 
                 next_state = MOVING;
                 
-            case BUMPED
+                fprintf('turning state\n');
+                
+            case BUMP
                 
                  %stop the robot if bumped
                 SetFwdVelRadiusRoomba(serPort, 0, inf);
@@ -137,6 +143,8 @@ function finalRad = hw1_sim(serPort)
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
                 
                 next_state = MOVING;
+                
+                fprintf('bump state\n');
                 
             case FINDING_ORIGIN
                 
