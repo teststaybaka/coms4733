@@ -29,7 +29,7 @@ function finalRad = hw1_sim(serPort)
     deviation = 0.05;
     time = tic;
     
-    forward_velocity = 0.05;
+    forward_velocity = 0.2;
     forward_step = 0;
     time_step = 0.1;
     
@@ -87,7 +87,7 @@ function finalRad = hw1_sim(serPort)
                     print_status(x, y, angle, dist, distTravel);
                     SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                     
-                    if forward_step >= 10
+                    if forward_step >= 10 * time_step
                         next_state = TURNING;
                     else
                         next_state = MOVING;
