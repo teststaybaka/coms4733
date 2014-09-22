@@ -13,20 +13,26 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function finalRad = hw1_sim(serPort)
+
+    %define state for the state machine
+    INITIAL        = 0;
+    MOVING         = 1;
+    TURNING        = 2;
+    BUMPED         = 3;
+    FINDING_ORIGIN = 4;
     
-    robotRadius = 0.2;
+    current_state  = INITIAL;
+    next_state     = INITIAL;
+    
     maxDuration = 30000;
     distTravel = 0;
     deviation = 0.05;
     time = tic;
-    firstBumped = false;
     
-    forward_velocity = 0.2;
+    forward_velocity = 0.05;
     forward_step = 0;
-    current_state = 0;
     time_step = 0.1;
-    turn_step = 0;
-    angle_accu = 0;
+    
     x = 0;
     y = 0;
     angle = 0;
