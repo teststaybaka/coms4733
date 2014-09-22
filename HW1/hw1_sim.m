@@ -18,7 +18,7 @@ function finalRad = hw1_sim(serPort)
     INITIAL        = 0;
     MOVING         = 1;
     TURNING        = 2;
-    BUMPED         = 3;
+    BUMP           = 3;
     FINDING_ORIGIN = 4;
     
     current_state  = INITIAL;
@@ -38,32 +38,90 @@ function finalRad = hw1_sim(serPort)
     angle = 0;
     
     while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel*deviation, 2))
-        
         pause(time_step);
-        
-        %SetFwdVelRadiusRoomba(serPort, 0.0, inf);
-        [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-        bumped = BumpRight || BumpLeft || BumpFront;
         
         %this is an epic fail sensor, need a perfect perpendicular >"<
         %hasWall = WallSensorReadRoomba(serPort);
         
-        if ~firstBumped
-            if bumped
-                firstBumped = true;
-                SetFwdVelRadiusRoomba(serPort, 0, inf);
+        switch current_state
+            
+            case INITIAL
                 
-                %set point for distance and angle variable (reference point)
-                DistanceSensorRoomba(serPort);
-                AngleSensorRoomba(serPort);
+                [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+                bumped = BumpRight || BumpLeft || BumpFront;
                 
-                bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
-            else
+                if bumped
+                    SetFwdVelRadiusRoomba(serPort, 0, inf);
+                    %set point for distance and angle variable (reference point)
+                    DistanceSensorRoomba(serPort);
+                    AngleSensorRoomba(serPort);
+
+                    bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
+                    
+                    next_state = MOVING;
+                else
+                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+                    next_state = INITIAL
+                end
+                
+            case MOVING
+                
+                [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+                bumped = BumpRight || BumpLeft || BumpFront;
+                
+                if bumped
+                    next_state = BUMP;
+                else
+                    forward_step = forward_step + time_step;
+                    % distance from last position
+                    dist = DistanceSensorRoomba(serPort);
+
+                    %calculating new parameters
+                    distTravel = distTravel + dist;
+                    angle = angle + AngleSensorRoomba(serPort);
+                    x = x + dist*cos(angle);
+                    y = y + dist*sin(angle);
+
+                    print_status(x, y, angle, dist, distTravel);
+                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+                    
+                    if forward_step >= 10
+                        next_state = TURNING;
+                    else
+                        next_state = MOVING;
+                    end
+                end
+                
+            case TURNING
+                
+                forward_step = 0;
+                % distance from last position
+                dist = DistanceSensorRoomba(serPort);
+
+                %calculating new parameters
+                distTravel = distTravel + dist;
+                angle = angle + AngleSensorRoomba(serPort);
+                x = x + dist*cos(angle);
+                y = y + dist*sin(angle);
+
+                print_status(x, y, angle, dist, distTravel);
+                turnAngle(serPort, 0.1, -45);
+
                 SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-            end
-        else
-            if bumped
-                %stop the robot if bumped
+                pause(4*time_step);
+
+                [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+                bumped = BumpRight || BumpLeft || BumpFront;
+
+                if ~bumped 
+                    turnAngle(serPort, 0.1, -45);
+                end
+                
+                next_state = MOVING;
+                
+            case BUMPED
+                
+                 %stop the robot if bumped
                 SetFwdVelRadiusRoomba(serPort, 0, inf);
                 forward_step = 0;
                 % distance from last position
@@ -75,51 +133,18 @@ function finalRad = hw1_sim(serPort)
                 x = x + dist*cos(angle);
                 y = y + dist*sin(angle);
                 
-                fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
-                fprintf('Turning State \n\n');
+                print_status(x, y, angle, dist, distTravel);
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
-            else
-                if forward_step >= (10 * time_step)
-                    forward_step = 0;
-                    % distance from last position
-                    dist = DistanceSensorRoomba(serPort);
-                    
-                    %calculating new parameters
-                    distTravel = distTravel + dist;
-                    angle = angle + AngleSensorRoomba(serPort);
-                    x = x + dist*cos(angle);
-                    y = y + dist*sin(angle);
-                    
-                    fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
-                    fprintf('Turning State \n\n');
-                    turnAngle(serPort, 0.1, -45);
-                    
-                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                    pause(4*time_step);
-                    
-                    [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-                    bumped = BumpRight || BumpLeft || BumpFront;
-                    
-                    if ~bumped 
-                        turnAngle(serPort, 0.1, -45);
-                    end
-                else
-                    forward_step = forward_step + time_step;
-                    % distance from last position
-                    dist = DistanceSensorRoomba(serPort);
-                    
-                    %calculating new parameters
-                    distTravel = distTravel + dist;
-                    angle = angle + AngleSensorRoomba(serPort);
-                    x = x + dist*cos(angle);
-                    y = y + dist*sin(angle);
-                    
-                    fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
-                    fprintf('Moving State \n\n');
-                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                end
-            end  % roomba movement
-        end % first bumped check        
+                
+                next_state = MOVING;
+                
+            case FINDING_ORIGIN
+                
+            otherwise
+                fprintf('ERR: Should not end up here.');
+        end
+        
+        current_state = next_state;  
     end %end of while loop
     
     SetFwdVelRadiusRoomba(serPort, 0.0, inf);
@@ -133,4 +158,8 @@ function bump_turn(serPort, BumpRight, BumpLeft, BumpFront)
     elseif BumpFront
         turnAngle(serPort, 0.1, 90);
     end
+end
+
+function print_status(x, y, angle, dist, distTravel)
+    fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
 end
