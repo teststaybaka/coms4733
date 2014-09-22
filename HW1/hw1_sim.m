@@ -29,15 +29,15 @@ function finalRad = hw1_sim(serPort)
     deviation = 0.05;
     time = tic;
     
-    forward_velocity = 0.2;
+    forward_velocity = 0.05;
     forward_step = 0;
-    time_step = 0.1;
+    time_step = 0.4;
     
     x = 0;
     y = 0;
     angle = 0;
     
-    while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel*deviation, 2))
+    while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel * deviation, 2))
         pause(time_step);
         
         %this is an epic fail sensor, need a perfect perpendicular >"<
@@ -72,6 +72,7 @@ function finalRad = hw1_sim(serPort)
                 bumped = BumpRight || BumpLeft || BumpFront;
                 
                 if bumped
+                    SetFwdVelRadiusRoomba(serPort, 0, inf);
                     next_state = BUMP;
                 else
                     forward_step = forward_step + time_step;
@@ -87,7 +88,13 @@ function finalRad = hw1_sim(serPort)
                     print_status(x, y, angle, dist, distTravel);
                     SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                     
-                    if forward_step >= 10 * time_step
+                    [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+                    bumped = BumpRight || BumpLeft || BumpFront;
+                    
+                    if bumped
+                        SetFwdVelRadiusRoomba(serPort, 0, inf);
+                        next_state = BUMP;
+                    elseif forward_step >= 5 * time_step
                         next_state = TURNING;
                     else
                         next_state = MOVING;
@@ -109,17 +116,7 @@ function finalRad = hw1_sim(serPort)
                 y = y + dist*sin(angle);
 
                 print_status(x, y, angle, dist, distTravel);
-                turnAngle(serPort, 0.1, -45);
-
-                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
-                pause(4*time_step);
-
-                [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-                bumped = BumpRight || BumpLeft || BumpFront;
-
-                if ~bumped 
-                    turnAngle(serPort, 0.1, -45);
-                end
+                turnAngle(serPort, 0.1, -30);
                 
                 next_state = MOVING;
                 
