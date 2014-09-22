@@ -21,10 +21,10 @@ function finalRad = hw1_sim(serPort)
     time = tic;
     firstBumped = false;
     
-    forward_velocity = 0.1;
+    forward_velocity = 0.2;
     forward_step = 0;
     current_state = 0;
-    time_step = 0.4;
+    time_step = 0.1;
     turn_step = 0;
     angle_accu = 0;
     x = 0;
@@ -45,6 +45,7 @@ function finalRad = hw1_sim(serPort)
         if ~firstBumped
             if bumped
                 firstBumped = true;
+                SetFwdVelRadiusRoomba(serPort, 0, inf);
                 
                 %set point for distance and angle variable (reference point)
                 DistanceSensorRoomba(serPort);
@@ -56,6 +57,8 @@ function finalRad = hw1_sim(serPort)
             end
         else
             if bumped
+                %stop the robot if bumped
+                SetFwdVelRadiusRoomba(serPort, 0, inf);
                 forward_step = 0;
                 % distance from last position
                 dist = DistanceSensorRoomba(serPort);
@@ -66,11 +69,11 @@ function finalRad = hw1_sim(serPort)
                 x = x + dist*cos(angle);
                 y = y + dist*sin(angle);
                 
-                fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
                 fprintf('Turning State \n\n');
                 bump_turn(serPort, BumpRight, BumpLeft, BumpFront);
             else
-                if forward_step >= (3 * time_step)
+                if forward_step >= (10 * time_step)
                     forward_step = 0;
                     % distance from last position
                     dist = DistanceSensorRoomba(serPort);
@@ -81,9 +84,19 @@ function finalRad = hw1_sim(serPort)
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
                     
-                    fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                    fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
                     fprintf('Turning State \n\n');
-                    turnAngle(serPort, 0.1, -30);
+                    turnAngle(serPort, 0.1, -45);
+                    
+                    SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+                    pause(4*time_step);
+                    
+                    [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+                    bumped = BumpRight || BumpLeft || BumpFront;
+                    
+                    if ~bumped 
+                        turnAngle(serPort, 0.1, -45);
+                    end
                 else
                     forward_step = forward_step + time_step;
                     % distance from last position
@@ -95,7 +108,7 @@ function finalRad = hw1_sim(serPort)
                     x = x + dist*cos(angle);
                     y = y + dist*sin(angle);
                     
-                    fprintf('%.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist);
+                    fprintf('%.3f, %.3f, %.3f, %.3f, %.3f\n', x, y, angle, dist, distTravel);
                     fprintf('Moving State \n\n');
                     SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 end
@@ -108,7 +121,7 @@ end
 
 function bump_turn(serPort, BumpRight, BumpLeft, BumpFront)
     if BumpRight
-        turnAngle(serPort, 0.1, 15);
+        turnAngle(serPort, 0.1, 20);
     elseif BumpLeft
         turnAngle(serPort, 0.1, 105);
     elseif BumpFront
