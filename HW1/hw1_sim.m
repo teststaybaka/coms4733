@@ -39,7 +39,6 @@ function finalRad = hw1_sim(serPort)
     
     while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel * deviation, 2))
         pause(time_step);
-        SetFwdVelRadiusRoomba(serPort, 0, inf);
         %this is an epic fail sensor, need a perfect perpendicular >"<
         %hasWall = WallSensorReadRoomba(serPort);
         
@@ -94,7 +93,7 @@ function finalRad = hw1_sim(serPort)
                     if bumped
                         SetFwdVelRadiusRoomba(serPort, 0, inf);
                         next_state = BUMP;
-                    elseif forward_step >= 10 * time_step
+                    elseif forward_step >= 4 * time_step
                         next_state = TURNING;
                     else
                         next_state = MOVING;
