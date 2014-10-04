@@ -15,39 +15,36 @@
 function finalRad = hw2_team_19(serPort)
 
     %define state for the state machine
-    INITIAL        = 0;
-    MOVING         = 1;
-    TURNING        = 2;
-    BUMP           = 3;
-    FINDING_ORIGIN = 4;
+    M_MOVING       = 0;
+    N_BUMP_ROTATE  = 1;
+    N_MOVING       = 2;
+    N_TURN         = 3;
     
-    current_state  = INITIAL;
-    next_state     = INITIAL;
+    current_state  = M_MOVING;
     
-    maxDuration = 30000;
     distTravel = 0;
     deviation = 0.02;
-    time = tic;
     
     forward_velocity = 0.1;
     forward_step = 0;
     time_step = 0.1;
-    
+
+    % INITIAL:
+    [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+    hasWall = WallSensorReadRoomba(serPort);
+    DistanceSensorRoomba(serPort);
+    AngleSensorRoomba(serPort);
     x = 0;
     y = 0;
     angle = 0;
-
-    while (toc(time) < maxDuration) && (power(x, 2) + power(y, 2) >= power(distTravel * deviation, 2))
+    % INITIAL END;
+    
+    while 1
         pause(time_step);
-        %this is an epic fail sensor, need a perfect perpendicular >"<
-        %hasWall = WallSensorReadRoomba(serPort);
         
         switch current_state
-            
-            case INITIAL
-                
-                [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-                bumped = BumpRight || BumpLeft || BumpFront;
+            case M_MOVING
+                SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 
                 if bumped
                     SetFwdVelRadiusRoomba(serPort, 0, inf);
