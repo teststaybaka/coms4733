@@ -69,6 +69,7 @@ function finalRad = hw2_team_19(serPort)
     
     while abs(x - 10) > accept_error
         pause(time_step);
+		fprintf('%f %f %f\n', x, y, angle);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
@@ -85,6 +86,7 @@ function finalRad = hw2_team_19(serPort)
                     
                     next_state = N_MOVING;
                 else
+					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 end
                 
@@ -101,7 +103,8 @@ function finalRad = hw2_team_19(serPort)
                     next_state = N_MOVING;
                     
 				elseif x - m_x > 0 && abs(y) < accept_error
-                    
+
+					SetFwdVelRadiusRoomba(serPort, 0, inf);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					turnAngle(serPort, 0.2, -angle/2/pi*360);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -198,6 +201,7 @@ function finalRad = hw2_team_19(serPort)
                     
 				end
 				
+				SetFwdVelRadiusRoomba(serPort, 0, inf);
 				[x, y, angle] = calculate_coord(serPort, x, y, angle);
 				turnAngle(serPort, 0.2, -90);
 				[x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -220,7 +224,6 @@ function finalRad = hw2_team_19(serPort)
 end
 
 function [x, y, angle] = calculate_coord(serPort, x, y, angle)
-	SetFwdVelRadiusRoomba(serPort, 0, inf);
     dist = DistanceSensorRoomba(serPort);
     
     angle = angle + AngleSensorRoomba(serPort);
@@ -229,6 +232,7 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle)
 end
 
 function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle)
+	SetFwdVelRadiusRoomba(serPort, 0, inf);
     [x, y, angle] = calculate_coord(serPort, x, y, angle);
 	
     if BumpRight
