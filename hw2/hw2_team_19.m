@@ -32,9 +32,9 @@ function finalRad = hw2_team_19(serPort)
 	forward_corner_limit = 10;
     time_step = 0.1;
     right_search_count = 0;
-    right_search_limit = 5;
+    right_search_limit = 10;
     left_search_count = 0;
-    left_search_limit = 10;
+    left_search_limit = 15;
 
     % INITIAL:
     [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
@@ -72,7 +72,7 @@ function finalRad = hw2_team_19(serPort)
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     state = N_MOVING;
                     forward_count = 0;
-				elseif x - m_x > 0 && abs(y) < accpet_error
+				elseif x - m_x > 0 && abs(y) < accept_error
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					turnAngle(serPort, 0.2, -angle/2/pi*360);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -100,13 +100,16 @@ function finalRad = hw2_team_19(serPort)
                     if left_search_count > left_search_limit
                         left_search_count = 0;
 						right_search_count = 0;
+						a = AngleSensorRoomba(serPort);
+						turnAngle(serPort, 0.2, -a/2/pi*360);
+						[x, y, angle] = calculate_coord(serPort, x, y, angle);
 						state = N_CORNER_FORWARD;
                     else
-                        SetFwdVelAngVelCreate(serPort, 0, 1.0);
+                        SetFwdVelAngVelCreate(serPort, 0, 0.2);
                         left_search_count = left_search_count + 1;
                     end
                 else
-                    SetFwdVelAngVelCreate(serPort, 0, -1.0);
+                    SetFwdVelAngVelCreate(serPort, 0, -0.2);
                     right_search_count = right_search_count + 1;
                 end
 			case N_CORNER_FORWARD
