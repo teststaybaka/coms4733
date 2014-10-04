@@ -12,7 +12,7 @@
 %	Using the iRobot Create Matlab Simulator and the iRobot Create
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function finalRad = hw1_sim(serPort)
+function finalRad = hw1_team_19(serPort)
 
     %define state for the state machine
     INITIAL        = 0;
@@ -26,12 +26,12 @@ function finalRad = hw1_sim(serPort)
     
     maxDuration = 30000;
     distTravel = 0;
-    deviation = 0.02;
+    deviation = 0.01;
     time = tic;
     
     forward_velocity = 0.1;
     forward_step = 0;
-    time_step = 0.1;
+    time_step = 0.4;
     
     x = 0;
     y = 0;
@@ -93,7 +93,7 @@ function finalRad = hw1_sim(serPort)
                     if bumped
                         SetFwdVelRadiusRoomba(serPort, 0, inf);
                         next_state = BUMP;
-                    elseif forward_step >= 4 * time_step
+                    elseif forward_step >= 5 * time_step
                         next_state = TURNING;
                     else
                         next_state = MOVING;
@@ -152,6 +152,7 @@ function finalRad = hw1_sim(serPort)
     end %end of while loop
     
     SetFwdVelRadiusRoomba(serPort, 0.0, inf);
+    fprintf('Total time cost: %f\n', toc(time));
 end
 
 function bump_turn(serPort, BumpRight, BumpLeft, BumpFront)
