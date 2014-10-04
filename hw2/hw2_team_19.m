@@ -86,7 +86,7 @@ function finalRad = hw2_team_19(serPort)
                     next_state = N_MOVING;
                 else
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
                 end
                 
                 fprintf('M_MOVING : ');
@@ -103,7 +103,7 @@ function finalRad = hw2_team_19(serPort)
                     
 				elseif x - m_x > 0 && abs(y) < accept_error
 
-					SetFwdVelRadiusRoomba(serPort, 0, inf);
+					SetFwdVelAngVelCreate(serPort, 0, 0);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					turnAngle(serPort, 0.2, -angle/2/pi*360);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -112,14 +112,14 @@ function finalRad = hw2_team_19(serPort)
                     
                 elseif forward_count > forward_limit
                     
-					SetFwdVelRadiusRoomba(serPort, 0, inf);
+					SetFwdVelAngVelCreate(serPort, 0, 0);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
                     forward_count = 0;
 					next_state = N_WALL_FINDING;
                     
                 else
                     
-					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
                     
                 end
@@ -183,7 +183,7 @@ function finalRad = hw2_team_19(serPort)
                     
                 else
                     
-					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
                     
                 end
@@ -200,7 +200,7 @@ function finalRad = hw2_team_19(serPort)
                     
 				end
 				
-				SetFwdVelRadiusRoomba(serPort, 0, inf);
+				SetFwdVelAngVelCreate(serPort, 0, 0);
 				[x, y, angle] = calculate_coord(serPort, x, y, angle);
 				turnAngle(serPort, 0.2, -90);
 				[x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -218,7 +218,7 @@ function finalRad = hw2_team_19(serPort)
         current_state = next_state;
     end %end of while loop
     
-    SetFwdVelRadiusRoomba(serPort, 0.0, inf);
+	SetFwdVelAngVelCreate(serPort, 0, 0);
 	fprintf('%f %f %d\n', x, y, abs(x - 10) < accept_error);
 end
 
@@ -231,7 +231,7 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle)
 end
 
 function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle)
-	SetFwdVelRadiusRoomba(serPort, 0, inf);
+	SetFwdVelAngVelCreate(serPort, 0, 0);
     [x, y, angle] = calculate_coord(serPort, x, y, angle);
 	
     if BumpRight
