@@ -14,6 +14,16 @@
 
 function finalRad = hw1_team_19(serPort)
 
+    try
+        arg_check = strcmp(serPort.type, 'serial');
+        
+        if arg_check
+            fprintf('Running on Roomba.\n');
+        end
+    catch 
+        fprintf('Running on simulator.\n');
+    end  
+    
     %define state for the state machine
     INITIAL        = 0;
     MOVING         = 1;
