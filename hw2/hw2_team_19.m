@@ -69,7 +69,6 @@ function finalRad = hw2_team_19(serPort)
     
     while abs(x - 10) > accept_error
         pause(time_step);
-		fprintf('%f %f %f\n', x, y, angle);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
