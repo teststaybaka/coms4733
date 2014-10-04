@@ -28,12 +28,13 @@ function finalRad = hw2_team_19(serPort)
     
     forward_velocity = 0.1;
     forward_count = 0;
-    forward_limit = 3;
+    forward_limit = 10;
+	forward_corner_limit = 10;
     time_step = 0.1;
     right_search_count = 0;
-    right_search_limit = 3;
+    right_search_limit = 5;
     left_search_count = 0;
-    left_search_limit = 6;
+    left_search_limit = 10;
 
     % INITIAL:
     [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
@@ -56,6 +57,7 @@ function finalRad = hw2_team_19(serPort)
                 
         switch state
             case M_MOVING
+				fprintf('M_MOVING\n');
                 if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     state = N_MOVING;
@@ -65,6 +67,7 @@ function finalRad = hw2_team_19(serPort)
 					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
                 end
             case N_MOVING
+				fprintf('N_MOVING\n');
                 if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     state = N_MOVING;
@@ -72,24 +75,26 @@ function finalRad = hw2_team_19(serPort)
 				elseif x - m_x > 0 && abs(y) < accpet_error
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					turnAngle(serPort, 0.2, -angle/2/pi*360);
-					[x, y, angle] = calculate_coord(serPort, x, y, angle)
+					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					state = M_MOVING;
                 elseif forward_count > forward_limit
 					SetFwdVelRadiusRoomba(serPort, 0, inf);
-					[x, y, angle] = calculate_coord(serPort, x, y, angle)
+					[x, y, angle] = calculate_coord(serPort, x, y, angle);
+					forward_count = 0;
 					state = N_WALL_FINDING;
 				else
 					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
 					forward_count = forward_count + 1;
                 end
             case N_WALL_FINDING;
+				fprintf('N_WALL_FINDING\n');
                 hasWall = WallSensorReadRoomba(serPort);
                 if hasWall
-                    left_search_count = 0
-                    right_search_count = 0
+                    left_search_count = 0;
+                    right_search_count = 0;
 					a = AngleSensorRoomba(serPort);
                     turnAngle(serPort, 0.2, -a/2/pi*360);
-					[x, y, angle] = calculate_coord(serPort, x, y, angle)
+					[x, y, angle] = calculate_coord(serPort, x, y, angle);
 					state = N_MOVING;
                 elseif right_search_count > right_search_limit
                     if left_search_count > left_search_limit
@@ -97,30 +102,37 @@ function finalRad = hw2_team_19(serPort)
 						right_search_count = 0;
 						state = N_CORNER_FORWARD;
                     else
-                        SetFwdVelAngleVelCreate(serPort, 0, -1.0);
+                        SetFwdVelAngVelCreate(serPort, 0, 1.0);
                         left_search_count = left_search_count + 1;
                     end
                 else
-                    SetFwdVelAngleVelCreate(serPort, 0, 1.0);
+                    SetFwdVelAngVelCreate(serPort, 0, -1.0);
                     right_search_count = right_search_count + 1;
                 end
 			case N_CORNER_FORWARD
+				fprintf('N_CORNER_FORWARD\n');
 				if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     state = N_MOVING;
 				end
 				
-				SetFwdVelRadiusRoomba(serPort, 0.05, inf);
-				[x, y, angle] = calculate_coord(serPort, x, y, angle)
-				state = N_CORNER_TURN
+				if forward_count > forward_corner_limit
+					forward_count = 0;
+					state = N_CORNER_TURN;
+				else
+					SetFwdVelRadiusRoomba(serPort, forward_velocity, inf);
+					forward_count = forward_count + 1;
+				end
 			case N_CORNER_TURN
+				fprintf('N_CORNER_TURN\n');
 				if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     state = N_MOVING;
 				end
 				
-				turnAngle(serPort, 0.2, 90);
-				[x, y, angle] = calculate_coord(serPort, x, y, angle)
+				[x, y, angle] = calculate_coord(serPort, x, y, angle);
+				turnAngle(serPort, 0.2, -90);
+				[x, y, angle] = calculate_coord(serPort, x, y, angle);
 				state = N_MOVING;
             otherwise
                 fprintf('ERR: Should not end up here.');
@@ -140,7 +152,7 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle)
 end
 
 function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle)
-    [x, y, angle] = calculate_coord(serPort, x, y, angle)
+    [x, y, angle] = calculate_coord(serPort, x, y, angle);
 	
     if BumpRight
         turnAngle(serPort, 0.2, 30);
@@ -150,7 +162,7 @@ function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y
         turnAngle(serPort, 0.2, 90);
     end
 	
-	[x, y, angle] = calculate_coord(serPort, x, y, angle)
+	[x, y, angle] = calculate_coord(serPort, x, y, angle);
 end
 
 function print_status(x, y, angle, dist, distTravel)
