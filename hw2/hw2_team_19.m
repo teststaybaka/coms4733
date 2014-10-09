@@ -26,8 +26,8 @@ function finalRad = hw2_team_19(serPort)
             forward_limit = 6;
 			forward_corner_limit = 6;
             time_step = 0.1;
-            right_search_limit = 3;
-            left_search_limit = 6;
+            right_search_limit = 20;
+            left_search_limit = 28;
         end
     catch 
         fprintf('Running on simulator.\n');
@@ -35,11 +35,11 @@ function finalRad = hw2_team_19(serPort)
         accept_error = 0.05;
 
         forward_velocity = 0.2;
-        forward_limit = 3;
-		forward_corner_limit = 7;
+        forward_limit = 4;
+		forward_corner_limit = 4;
         time_step = 0.1;
-        right_search_limit = 4;
-        left_search_limit = 6;
+        right_search_limit = 30;
+        left_search_limit = 38;
     end 
     
     %define state for the state machine
@@ -69,7 +69,7 @@ function finalRad = hw2_team_19(serPort)
     angle = 0;
     % INITIAL END;
     
-    while abs(x - 10) > accept_error
+    while abs(x - 4) > accept_error
         pause(time_step);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
@@ -107,8 +107,12 @@ function finalRad = hw2_team_19(serPort)
 
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    turnAngle(serPort, 0.1, 10);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
 					turnAngle(serPort, 0.1, -angle/2/pi*360);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    turnAngle(serPort, 0.1, -angle/2/pi*360);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
                     
 					next_state = M_MOVING;
                     
@@ -139,10 +143,10 @@ function finalRad = hw2_team_19(serPort)
                     left_search_count = 0;
                     right_search_count = 0;
                     
-					a = AngleSensorRoomba(serPort);
-                    turnAngle(serPort, 0.2, -a/2/pi*360);
+					% a = AngleSensorRoomba(serPort);
+                    % turnAngle(serPort, 0.2, -a/2/pi*360);
+                    SetFwdVelAngVelCreate(serPort, 0, 0.0);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    
 					next_state = N_MOVING;
                     
                 elseif right_search_count > right_search_limit
@@ -153,6 +157,7 @@ function finalRad = hw2_team_19(serPort)
 						right_search_count = 0;
 						a = AngleSensorRoomba(serPort);
 						turnAngle(serPort, 0.2, -a/2/pi*360);
+                        SetFwdVelAngVelCreate(serPort, 0, 0.0);
 						[x, y, angle] = calculate_coord(serPort, x, y, angle);
 
 						next_state = N_CORNER_FORWARD;
@@ -165,7 +170,7 @@ function finalRad = hw2_team_19(serPort)
                     end
                     
                 else
-                    
+                    fprintf('right count:%d %d\n', right_search_count, right_search_limit)
                     SetFwdVelAngVelCreate(serPort, 0, -0.5);
                     right_search_count = right_search_count + 1;
                     
@@ -231,7 +236,8 @@ end
 
 function [x, y, angle] = calculate_coord(serPort, x, y, angle)
     dist = DistanceSensorRoomba(serPort);
-    angle = angle + AngleSensorRoomba(serPort);
+    a = AngleSensorRoomba(serPort);
+    angle = angle + a;
 	while angle > pi
 		angle = angle - 2*pi;
 	end
@@ -240,6 +246,7 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle)
 	end
 	x = x + dist*cos(angle);
 	y = y + dist*sin(angle);
+    % fprintf('angle sensor:%f\n', a);
 end
 
 function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle)
