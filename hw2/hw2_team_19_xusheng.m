@@ -12,7 +12,7 @@
 %	Using the iRobot Create Matlab Simulator and the iRobot Create
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function finalRad = hw2_team_19(serPort)
+function hw2_team_19_xusheng(serPort)
 
     try
         arg_check = strcmp(serPort.type, 'serial');
@@ -23,7 +23,7 @@ function finalRad = hw2_team_19(serPort)
             accept_error = 0.02;
 
             forward_velocity = 0.1;
-            forward_limit = 3;
+            %forward_limit = 3;
             forward_corner_limit = 5;
             time_step = 0.1;
             right_search_limit = 3;
@@ -35,8 +35,8 @@ function finalRad = hw2_team_19(serPort)
         accept_error = 0.02;
 
         forward_velocity = 0.2;
-        forward_limit = 3;
-        forward_corner_limit = 10;
+        %forward_limit = 3;
+        forward_corner_limit = 13;
         time_step = 0.1;
         right_search_limit = 3;
         left_search_limit = 6;
@@ -70,13 +70,18 @@ function finalRad = hw2_team_19(serPort)
     angle = 0;
     % INITIAL END;
     
-    while abs(x - 10) > accept_error
+    while abs(x - 4) > accept_error
         pause(time_step);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         bumped = BumpRight || BumpLeft || BumpFront;
         
         hasWall = WallSensorReadRoomba(serPort);
+        
+        %if bumped, stop the roomba right away
+        if bumped
+             SetFwdVelAngVelCreate(serPort, 0, 0);
+        end
                 
         switch current_state
             
@@ -119,6 +124,7 @@ function finalRad = hw2_team_19(serPort)
                     if (x - m_x > 0) && abs(y) < accept_error
                         SetFwdVelAngVelCreate(serPort, 0, 0);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.2, 1);
                         turnAngle(serPort, 0.2, -angle/2/pi*360);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         
@@ -135,11 +141,7 @@ function finalRad = hw2_team_19(serPort)
                 if hasWall
                     left_search_count = 0;
                     right_search_count = 0;
-                    
-					%a = AngleSensorRoomba(serPort);
-                    %turnAngle(serPort, 0.2, -a/2/pi*360);
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    %turnAngle(serPort, 0.1, -10);
                     
 					next_state = N_MOVING;
                     
@@ -164,12 +166,18 @@ function finalRad = hw2_team_19(serPort)
                 fprintf('WALL_FINDING : ');
                 print_status(x, y, angle, distTravel);
                 
-			case CORNER_FORWARD
+			case CORNER_FORWARD 
                 
-				if forward_count > forward_corner_limit
+                if forward_count > forward_corner_limit
 					forward_count = 0;
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
 					next_state = CORNER_TURN;
+                elseif hasWall
+                    forward_count = 0;
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    next_state = N_MOVING;
                 else
+                    turnAngle(serPort, 0.2, -2);
                     SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle);
 					forward_count = forward_count + 1;
@@ -179,18 +187,23 @@ function finalRad = hw2_team_19(serPort)
                 print_status(x, y, angle, distTravel);
                 
 			case CORNER_TURN
-                
-				if bumped
+                             
+                if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle);
                     next_state = WALL_FINDING;
                 else
                     SetFwdVelAngVelCreate(serPort, 0, 0);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    turnAngle(serPort, 0.2, -90);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
                     
-                    forward_count = 0;
+                    %for some reason when it is trying to make a right turn
+                    %coming from south it is bugged and does not want to
+                    %turn, so the trick is to make a 1 degree turn then a
+                    %full 90 degree turn.
+                    %turnAngle(serPort, 0.2, -1);
+                    
+                    turnAngle(serPort, 0.2, -70);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
+
                     next_state = CORNER_MOVE;
                 end
                 
@@ -198,6 +211,7 @@ function finalRad = hw2_team_19(serPort)
                 print_status(x, y, angle, distTravel);
                 
             case CORNER_MOVE
+                
                 if bumped
                     [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle);
@@ -233,7 +247,8 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle)
     
     while angle > pi
 		angle = angle - 2*pi;
-	end
+    end
+    
 	while angle < -pi
 		angle = angle + 2*pi;
 	end
@@ -250,9 +265,9 @@ function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y
     fprintf('%.3f\n', angle);
 	
     if BumpRight
-        turnAngle(serPort, 0.2, 30);
+        turnAngle(serPort, 0.2, 20);
     elseif BumpLeft
-        turnAngle(serPort, 0.2, 120);
+        turnAngle(serPort, 0.2, 105);
     elseif BumpFront
         turnAngle(serPort, 0.2, 90);
     end
