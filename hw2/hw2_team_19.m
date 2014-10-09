@@ -22,6 +22,7 @@ function finalRad = hw2_team_19(serPort)
             distTravel = 0;
             accept_error = 0.02;
 
+            t_x = 4;
             forward_velocity = 0.1;
             forward_limit = 6;
 			forward_corner_limit = 6;
@@ -34,6 +35,7 @@ function finalRad = hw2_team_19(serPort)
         distTravel = 0;
         accept_error = 0.05;
 
+        t_x = 4;
         forward_velocity = 0.2;
         forward_limit = 4;
 		forward_corner_limit = 4;
@@ -69,7 +71,7 @@ function finalRad = hw2_team_19(serPort)
     angle = 0;
     % INITIAL END;
     
-    while abs(x - 4) > accept_error
+    while abs(x - t_x) > accept_error || abs(y) > accept_error
         pause(time_step);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
@@ -103,17 +105,28 @@ function finalRad = hw2_team_19(serPort)
                     
                     next_state = N_MOVING;
                     
-				elseif x - m_x > 0 && abs(y) < accept_error
+				elseif abs(t_x - x) < abs(t_x - m_x) && abs(y) < accept_error
 
-					SetFwdVelAngVelCreate(serPort, 0, 0);
-					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    turnAngle(serPort, 0.1, 10);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
-					turnAngle(serPort, 0.1, -angle/2/pi*360);
-					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    turnAngle(serPort, 0.1, -angle/2/pi*360);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    
+                    if x > t_x
+                        SetFwdVelAngVelCreate(serPort, 0, 0);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, 10);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, -angle/2/pi*360+180);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, -angle/2/pi*360+180);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    else
+                        SetFwdVelAngVelCreate(serPort, 0, 0);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, 10);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, -angle/2/pi*360);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        turnAngle(serPort, 0.1, -angle/2/pi*360);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    end
+
 					next_state = M_MOVING;
                     
                 elseif forward_count > forward_limit
