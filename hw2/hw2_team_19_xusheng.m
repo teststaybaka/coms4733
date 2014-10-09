@@ -13,18 +13,23 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function hw2_team_19_xusheng(serPort)
-
+    
+    simulator = true;
+    
     try
         arg_check = strcmp(serPort.type, 'serial');
         
         if arg_check
             fprintf('Running on Roomba.\n');
+            
+            simulator = false;
+            
             distTravel = 0;
-            accept_error = 0.02;
+            accept_error = 0.01;
 
             forward_velocity = 0.1;
             %forward_limit = 3;
-            forward_corner_limit = 5;
+            forward_corner_limit = 10;
             time_step = 0.1;
             right_search_limit = 3;
             left_search_limit = 6;
@@ -78,6 +83,8 @@ function hw2_team_19_xusheng(serPort)
         
         hasWall = WallSensorReadRoomba(serPort);
         
+        fprintf('Wall = %d\n\n', hasWall);
+        
         %if bumped, stop the roomba right away
         if bumped
              SetFwdVelAngVelCreate(serPort, 0, 0);
@@ -88,10 +95,9 @@ function hw2_team_19_xusheng(serPort)
             case M_MOVING
                 
                 if bumped
-                    SetFwdVelAngVelCreate(serPort, -1 * forward_velocity, 0);
-                    pause(time_step);
-                    
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
+                    %SetFwdVelAngVelCreate(serPort, -1 * forward_velocity, 0);
+                    %pause(time_step);
+                    %[x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
 					m_x = x;
 					m_y = y;
                     next_state = WALL_FINDING;
@@ -138,30 +144,44 @@ function hw2_team_19_xusheng(serPort)
                 
             case WALL_FINDING;
                 
-                if hasWall
-                    left_search_count = 0;
-                    right_search_count = 0;
-					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    
-					next_state = N_MOVING;
-                    
-                elseif right_search_count > right_search_limit
-                    
-                    if left_search_count > left_search_limit
+                if simulator
+                    if hasWall
                         left_search_count = 0;
-						right_search_count = 0;
-						next_state = CORNER_FORWARD;
-                    else
-                        SetFwdVelAngVelCreate(serPort, 0, 1.0);
+                        right_search_count = 0;
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
-                        left_search_count = left_search_count + 1;
+
+                        next_state = N_MOVING;
+
+                    elseif right_search_count > right_search_limit
+
+                        if left_search_count > left_search_limit
+                            left_search_count = 0;
+                            right_search_count = 0;
+                            next_state = CORNER_FORWARD;
+                        else
+                            SetFwdVelAngVelCreate(serPort, 0, 1.0);
+                            [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                            left_search_count = left_search_count + 1;
+                        end
+
+                    else
+                        SetFwdVelAngVelCreate(serPort, 0, -1.0);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                        right_search_count = right_search_count + 1;
                     end
-                    
-                else
-                    SetFwdVelAngVelCreate(serPort, 0, -1.0);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    right_search_count = right_search_count + 1;
                 end
+            
+                while ~hasWall
+                    pause(time_step);
+                    SetFwdVelAngVelCreate(serPort, 0, 0.5);
+                    hasWall = WallSensorReadRoomba(serPort);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
+                    
+                    if hasWall 
+                        SetFwdVelAngVelCreate(serPort, 0, 0);
+                        next_state = N_MOVING;
+                    end
+                end  
                 
                 fprintf('WALL_FINDING : ');
                 print_status(x, y, angle, distTravel);
@@ -261,9 +281,7 @@ function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y
 
 	SetFwdVelAngVelCreate(serPort, 0, 0);
     [x, y, angle] = calculate_coord(serPort, x, y, angle);
-    
-    fprintf('%.3f\n', angle);
-	
+
     if BumpRight
         turnAngle(serPort, 0.2, 20);
     elseif BumpLeft
