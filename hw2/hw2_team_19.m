@@ -20,36 +20,39 @@ function finalRad = hw2_team_19(serPort)
         if arg_check
             fprintf('Running on Roomba.\n');
             distTravel = 0;
-            accept_error = 0.02;
+            accept_error = 0.1;
 
             t_x = 4;
             forward_velocity = 0.1;
             forward_limit = 6;
 			forward_corner_limit = 6;
-            time_step = 0.1;
-            right_search_limit = 20;
-            left_search_limit = 28;
+            forward_corner_2_limit = 10;
+            time_step = 0.01;
+            right_search_limit = 10;
+            left_search_limit = 15;
         end
     catch 
         fprintf('Running on simulator.\n');
         distTravel = 0;
         accept_error = 0.05;
 
-        t_x = 4;
+        t_x = 3.5;
         forward_velocity = 0.2;
         forward_limit = 4;
 		forward_corner_limit = 4;
+        forward_corner_2_limit = 4;
         time_step = 0.1;
         right_search_limit = 30;
         left_search_limit = 38;
     end 
     
     %define state for the state machine
-    M_MOVING         = 0;
-    N_MOVING       	 = 1;
-    N_WALL_FINDING 	 = 2;
-    N_CORNER_FORWARD = 3;
-    N_CORNER_TURN    = 4;
+    M_MOVING            = 0;
+    N_MOVING       	    = 1;
+    N_WALL_FINDING 	    = 2;
+    N_CORNER_FORWARD    = 3;
+    N_CORNER_TURN       = 4;
+    N_CORNER_FORWARD_2  = 5;
 
     current_state  = M_MOVING;
     next_state = M_MOVING;
@@ -230,10 +233,31 @@ function finalRad = hw2_team_19(serPort)
 				turnAngle(serPort, 0.2, -90);
 				[x, y, angle] = calculate_coord(serPort, x, y, angle);
                 
-				next_state = N_MOVING;
+				next_state = N_CORNER_FORWARD_2;
                 
                 fprintf('N_CORNER_TURN : ');
                 print_status(x, y, angle, distTravel);
+
+            case N_CORNER_FORWARD_2
+
+                if bumped
+                    
+                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle);
+                    next_state = N_MOVING;
+                    
+                end
+
+                if forward_count > forward_corner_2_limit
+                    
+                    forward_count = 0;
+                    next_state = N_MOVING;
+
+                else
+
+                    SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+                    forward_count = forward_count + 1;
+
+                end
                 
             otherwise
                 fprintf('ERR: Should not end up here.');
