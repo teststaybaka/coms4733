@@ -37,7 +37,7 @@ function hw2_team_19_xusheng(serPort)
     catch 
         fprintf('Running on simulator.\n');
         distTravel = 0;
-        accept_error = 0.02;
+        accept_error = 0.05;
 
         forward_velocity = 0.2;
         %forward_limit = 3;
@@ -75,7 +75,7 @@ function hw2_team_19_xusheng(serPort)
     angle = 0;
     % INITIAL END;
     
-    while abs(x - 4) > accept_error
+    while abs(x - 4) > accept_error || abs(y) > accept_error
         pause(time_step);
         
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
@@ -132,6 +132,7 @@ function hw2_team_19_xusheng(serPort)
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         turnAngle(serPort, 0.2, 1);
                         turnAngle(serPort, 0.2, -angle/2/pi*360);
+                        turnAngle(serPort, 0.2, -angle/2/pi*360);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         
                         next_state = M_MOVING;
@@ -169,20 +170,20 @@ function hw2_team_19_xusheng(serPort)
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         right_search_count = right_search_count + 1;
                     end
+                else
+                    while ~hasWall
+                        pause(time_step);
+                        SetFwdVelAngVelCreate(serPort, 0, 0.5);
+                        hasWall = WallSensorReadRoomba(serPort);
+                        [x, y, angle] = calculate_coord(serPort, x, y, angle);
+
+                        if hasWall 
+                            SetFwdVelAngVelCreate(serPort, 0, 0);
+                            next_state = N_MOVING;
+                        end
+                    end  
                 end
             
-                while ~hasWall
-                    pause(time_step);
-                    SetFwdVelAngVelCreate(serPort, 0, 0.5);
-                    hasWall = WallSensorReadRoomba(serPort);
-                    [x, y, angle] = calculate_coord(serPort, x, y, angle);
-                    
-                    if hasWall 
-                        SetFwdVelAngVelCreate(serPort, 0, 0);
-                        next_state = N_MOVING;
-                    end
-                end  
-                
                 fprintf('WALL_FINDING : ');
                 print_status(x, y, angle, distTravel);
                 
@@ -213,15 +214,8 @@ function hw2_team_19_xusheng(serPort)
                     [x, y, angle] = calculate_coord(serPort, x, y, angle);
                     next_state = WALL_FINDING;
                 else
-                    SetFwdVelAngVelCreate(serPort, 0, 0);
-                    
-                    %for some reason when it is trying to make a right turn
-                    %coming from south it is bugged and does not want to
-                    %turn, so the trick is to make a 1 degree turn then a
-                    %full 90 degree turn.
-                    %turnAngle(serPort, 0.2, -1);
-                    
-                    turnAngle(serPort, 0.2, -70);
+                    SetFwdVelAngVelCreate(serPort, 0, 0);      
+                    turnAngle(serPort, 0.2, -65);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle);
 
                     next_state = CORNER_MOVE;
