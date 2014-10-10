@@ -24,15 +24,15 @@ function finalRad = hw2_team_19(serPort)
 
             t_x = 4;
             forward_velocity = 0.1;
-            forward_limit = 6;
+            forward_limit = 5;
 			forward_corner_limit = 10;
             forward_corner_2_limit = 10;
-            time_step = 0.01;
+            time_step = 0.1;
             right_search_limit = 10;
             left_search_limit = 15;
-            rotate_correction = 1.05;
-            dist_correction = 1.2;
-            turn_corner_limit = 5;
+            rotate_correction = 1.2;
+            dist_correction = 0.8;
+            turn_corner_limit = 15;
         end
     catch 
         fprintf('Running on simulator.\n');
@@ -131,8 +131,8 @@ function finalRad = hw2_team_19(serPort)
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                         turnAngle(serPort, 0.1, -angle/2/pi*360);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, -angle/2/pi*360);
-                        [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
+                        %turnAngle(serPort, 0.1, -angle/2/pi*360);
+                        %[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     end
 
 					next_state = M_MOVING;
@@ -181,11 +181,11 @@ function finalRad = hw2_team_19(serPort)
                         SetFwdVelAngVelCreate(serPort, 0, 0.0);
 						[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
 
-                        if flag == 1
-                            next_state = N_CORNER_TURN;
-                        else
+                        %if flag == 1
+                        %    next_state = N_CORNER_TURN;
+                        %else
                             next_state = N_CORNER_FORWARD;
-                        end
+                        %end
                         
                     else
                         
@@ -237,22 +237,22 @@ function finalRad = hw2_team_19(serPort)
                     
 				end
 				
-                if flag == 1
-                    if forward_count > turn_corner_limit
-                        forward_count = 0;
-                        next_state = N_MOVING;
-                    else
-                        SetFwdVelRadiusRoomb(serPort, forward_velocity, -0.1);
-                        forward_count = forward_count + 1;
-                    end
-                else
+                %if flag == 1
+                %    if forward_count > turn_corner_limit
+                %        forward_count = 0;
+                %        next_state = N_MOVING;
+                %    else
+                %        SetFwdVelRadiusRoomba(serPort, forward_velocity, -0.1);
+                %        forward_count = forward_count + 1;
+                %    end
+                %else
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     turnAngle(serPort, 0.1, -90);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     
                     next_state = N_CORNER_FORWARD_2;
-                end
+                %end
 
                 fprintf('N_CORNER_TURN : ');
                 print_status(x, y, angle, m_x);
