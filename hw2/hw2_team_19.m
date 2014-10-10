@@ -23,7 +23,7 @@ function finalRad = hw2_team_19(serPort)
             accept_error = 0.03;
 
             t_x = 4;
-            turn_velocity = 0.05;
+            turn_velocity = 0.03;
             forward_velocity = 0.05;
             forward_limit = 10;
 			forward_corner_limit = 20;
@@ -32,7 +32,7 @@ function finalRad = hw2_team_19(serPort)
             right_search_limit = 5;
             left_search_limit = 8;
             rotate_correction = 1.0;
-            dist_correction = 0.8;
+            dist_correction = 1;
             turn_corner_limit = 15;
         end
     catch 
@@ -117,7 +117,7 @@ function finalRad = hw2_team_19(serPort)
                     
                     next_state = N_MOVING;
                     
-				elseif abs(t_x - x) < abs(t_x - m_x) && abs(y) < accept_error
+				elseif abs(t_x - x) + accept_error < abs(t_x - m_x) && abs(y) < accept_error
 
                     if x > t_x
                         SetFwdVelAngVelCreate(serPort, 0, 0);
@@ -183,6 +183,7 @@ function finalRad = hw2_team_19(serPort)
 						a = AngleSensorRoomba(serPort);
 						turnAngle(serPort, turn_velocity, -a/2/pi*360);
 						[x, y, angle, record_x, record_y] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction, record_x, record_y);
+						[x, y, angle] = calculate_coord(serPort, x, y, angle+a, rotate_correction, dist_correction);
 
                         %if flag == 1
                         %    next_state = N_CORNER_TURN;
@@ -298,7 +299,9 @@ end
 function [x, y, angle, record_x, record_y] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction, record_x, record_y)
     dist = DistanceSensorRoomba(serPort)*dist_correction;
     a = AngleSensorRoomba(serPort);
+    
     angle = angle + a*rotate_correction;
+    
 	while angle > pi
 		angle = angle - 2*pi;
 	end
