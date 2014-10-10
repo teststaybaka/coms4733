@@ -19,7 +19,7 @@ function finalRad = hw2_team_19(serPort)
         
         if arg_check
             fprintf('Running on Roomba.\n');
-            distTravel = 0;
+            flag = 1;
             accept_error = 0.03;
 
             t_x = 4;
@@ -32,10 +32,11 @@ function finalRad = hw2_team_19(serPort)
             left_search_limit = 15;
             rotate_correction = 1.05;
             dist_correction = 1.2;
+            turn_corner_limit = 5;
         end
     catch 
         fprintf('Running on simulator.\n');
-        distTravel = 0;
+        flag = 0;
         accept_error = 0.05;
 
         t_x = 4;
@@ -47,7 +48,7 @@ function finalRad = hw2_team_19(serPort)
         right_search_limit = 30;
         left_search_limit = 38;
         rotate_correction = 1;
-        dist_correction = 1.2;
+        dist_correction = 1.1;
     end 
     
     %define state for the state machine
@@ -180,7 +181,11 @@ function finalRad = hw2_team_19(serPort)
                         SetFwdVelAngVelCreate(serPort, 0, 0.0);
 						[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
 
-						next_state = N_CORNER_FORWARD;
+                        if flag == 1
+                            next_state = N_CORNER_TURN;
+                        else
+                            next_state = N_CORNER_FORWARD;
+                        end
                         
                     else
                         
@@ -232,13 +237,23 @@ function finalRad = hw2_team_19(serPort)
                     
 				end
 				
-				SetFwdVelAngVelCreate(serPort, 0, 0);
-				[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-				turnAngle(serPort, 0.1, -90);
-				[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                
-				next_state = N_CORNER_FORWARD_2;
-                
+                if flag == 1
+                    if forward_count > turn_corner_limit
+                        forward_count = 0;
+                        next_state = N_MOVING;
+                    else
+                        SetFwdVelRadiusRoomb(serPort, forward_velocity, -0.1);
+                        forward_count = forward_count + 1;
+                    end
+                else
+                    SetFwdVelAngVelCreate(serPort, 0, 0);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
+                    turnAngle(serPort, 0.1, -90);
+                    [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
+                    
+                    next_state = N_CORNER_FORWARD_2;
+                end
+
                 fprintf('N_CORNER_TURN : ');
                 print_status(x, y, angle, m_x);
 
