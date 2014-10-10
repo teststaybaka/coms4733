@@ -171,7 +171,13 @@ function hw2_team_19_xusheng(serPort)
                         right_search_count = right_search_count + 1;
                     end
                 else
-                    while ~hasWall
+                    
+                    turn_count = 0;
+                    turn_limit = 10;
+                    
+                    %SetFwdVelAngVelCreate(serPort, -2*forward_velocity, 0);
+                    
+                    while ~hasWall && turn_count < turn_limit
                         pause(time_step);
                         SetFwdVelAngVelCreate(serPort, 0, 0.5);
                         hasWall = WallSensorReadRoomba(serPort);
@@ -182,6 +188,11 @@ function hw2_team_19_xusheng(serPort)
                             next_state = N_MOVING;
                         end
                     end  
+                    
+                    if hasWall 
+                        SetFwdVelAngVelCreate(serPort, 0, 0);
+                        next_state = N_MOVING;
+                    end
                 end
             
                 fprintf('WALL_FINDING : ');

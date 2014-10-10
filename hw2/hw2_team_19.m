@@ -23,14 +23,15 @@ function finalRad = hw2_team_19(serPort)
             accept_error = 0.03;
 
             t_x = 4;
-            forward_velocity = 0.1;
-            forward_limit = 5;
-			forward_corner_limit = 10;
-            forward_corner_2_limit = 10;
+            turn_velocity = 0.05;
+            forward_velocity = 0.05;
+            forward_limit = 10;
+			forward_corner_limit = 20;
+            forward_corner_2_limit = 20;
             time_step = 0.1;
-            right_search_limit = 10;
-            left_search_limit = 15;
-            rotate_correction = 1.2;
+            right_search_limit = 5;
+            left_search_limit = 8;
+            rotate_correction = 1.0;
             dist_correction = 0.8;
             turn_corner_limit = 15;
         end
@@ -40,6 +41,7 @@ function finalRad = hw2_team_19(serPort)
         accept_error = 0.05;
 
         t_x = 4;
+        turn_velocity = 0.1;
         forward_velocity = 0.2;
         forward_limit = 4;
 		forward_corner_limit = 4;
@@ -91,7 +93,7 @@ function finalRad = hw2_team_19(serPort)
                 
                 if bumped
                     
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
+                    [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
 					m_x = x;
 					m_y = y;
                     
@@ -108,7 +110,7 @@ function finalRad = hw2_team_19(serPort)
                 
                 if bumped
                     
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
+                    [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
                     forward_count = 0;
                     
                     next_state = N_MOVING;
@@ -118,20 +120,20 @@ function finalRad = hw2_team_19(serPort)
                     if x > t_x
                         SetFwdVelAngVelCreate(serPort, 0, 0);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, 10);
+                        turnAngle(serPort, turn_velocity, 10);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, -angle/2/pi*360+180);
+                        turnAngle(serPort, turn_velocity, -angle/2/pi*360+180);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, -angle/2/pi*360+180);
+                        turnAngle(serPort, turn_velocity, -angle/2/pi*360+180);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     else
                         SetFwdVelAngVelCreate(serPort, 0, 0);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, 10);
+                        turnAngle(serPort, turn_velocity, 10);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        turnAngle(serPort, 0.1, -angle/2/pi*360);
+                        turnAngle(serPort, turn_velocity, -angle/2/pi*360);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                        %turnAngle(serPort, 0.1, -angle/2/pi*360);
+                        %turnAngle(serPort, turn_velocity, -angle/2/pi*360);
                         %[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     end
 
@@ -172,13 +174,12 @@ function finalRad = hw2_team_19(serPort)
                     
                 elseif right_search_count > right_search_limit
                     
-                    if left_search_count > left_search_limit
+                    %if left_search_count > left_search_limit
                         
                         left_search_count = 0;
 						right_search_count = 0;
 						a = AngleSensorRoomba(serPort);
-						turnAngle(serPort, 0.1, -a/2/pi*360);
-                        SetFwdVelAngVelCreate(serPort, 0, 0.0);
+						turnAngle(serPort, turn_velocity, -a/2/pi*360);
 						[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
 
                         %if flag == 1
@@ -187,12 +188,12 @@ function finalRad = hw2_team_19(serPort)
                             next_state = N_CORNER_FORWARD;
                         %end
                         
-                    else
+                    %else
                         
-                        SetFwdVelAngVelCreate(serPort, 0, 0.5);
-                        left_search_count = left_search_count + 1;
+                    %    SetFwdVelAngVelCreate(serPort, 0, 0.5);
+                    %    left_search_count = left_search_count + 1;
                         
-                    end
+                    %end
                     
                 else
                     fprintf('right count:%d %d\n', right_search_count, right_search_limit)
@@ -208,7 +209,7 @@ function finalRad = hw2_team_19(serPort)
                 
 				if bumped
                     
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
+                    [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
                     next_state = N_MOVING;
                     
                 end
@@ -232,7 +233,7 @@ function finalRad = hw2_team_19(serPort)
                 
 				if bumped
                     
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
+                    [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
                     next_state = N_MOVING;
                     
 				end
@@ -248,7 +249,7 @@ function finalRad = hw2_team_19(serPort)
                 %else
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
-                    turnAngle(serPort, 0.1, -90);
+                    turnAngle(serPort, turn_velocity, -90);
                     [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
                     
                     next_state = N_CORNER_FORWARD_2;
@@ -261,7 +262,7 @@ function finalRad = hw2_team_19(serPort)
 
                 if bumped
                     
-                    [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
+                    [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction);
                     next_state = N_MOVING;
                     
                 end
@@ -305,18 +306,18 @@ function [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction
     % fprintf('angle sensor:%f\n', a);
 end
 
-function [x, y, angle] = bump_turn(serPort, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction)
+function [x, y, angle] = bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront, x, y, angle, rotate_correction, dist_correction)
 	fprintf('bumped\n');
 	
 	SetFwdVelAngVelCreate(serPort, 0, 0);
     [x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
 	
     if BumpRight
-        turnAngle(serPort, 0.1, 15);
+        turnAngle(serPort, turn_velocity, 15);
     elseif BumpLeft
-        turnAngle(serPort, 0.1, 120);
+        turnAngle(serPort, turn_velocity, 120);
     elseif BumpFront
-        turnAngle(serPort, 0.1, 90);
+        turnAngle(serPort, turn_velocity, 90);
     end
 	
 	[x, y, angle] = calculate_coord(serPort, x, y, angle, rotate_correction, dist_correction);
