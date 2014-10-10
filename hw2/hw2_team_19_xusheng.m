@@ -27,7 +27,7 @@ function hw2_team_19_xusheng(serPort)
             distTravel = 0;
             accept_error = 0.01;
 
-            forward_velocity = 0.1;
+            forward_velocity = 0.05;
             %forward_limit = 3;
             forward_corner_limit = 10;
             time_step = 0.1;
@@ -59,6 +59,7 @@ function hw2_team_19_xusheng(serPort)
     next_state = M_MOVING;
     
     % INITIAL:
+    t_x = 4;
     forward_count = 0;
     right_search_count = 0;
     left_search_count = 0;
@@ -103,7 +104,7 @@ function hw2_team_19_xusheng(serPort)
                     next_state = WALL_FINDING;
                 else
 					[x, y, angle] = calculate_coord(serPort, x, y, angle);
-					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+					SetFwdVelAngVelCreate(serPort, 2*forward_velocity, 0);
                 end
                 
                 fprintf('M_MOVING : ');
@@ -127,11 +128,10 @@ function hw2_team_19_xusheng(serPort)
                         next_state = CORNER_FORWARD;
                     end 
                     
-                    if (x - m_x > 0) && abs(y) < accept_error
+                    if abs(t_x - x) < abs(t_x - m_x) && abs(y) < accept_error
                         SetFwdVelAngVelCreate(serPort, 0, 0);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         turnAngle(serPort, 0.2, 1);
-                        turnAngle(serPort, 0.2, -angle/2/pi*360);
                         turnAngle(serPort, 0.2, -angle/2/pi*360);
                         [x, y, angle] = calculate_coord(serPort, x, y, angle);
                         
