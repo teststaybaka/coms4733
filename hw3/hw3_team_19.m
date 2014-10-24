@@ -35,32 +35,39 @@ function hw3_team_19(serPort)
     catch 
         fprintf('Running on simulator.\n');
         flag = 0;
-        accept_error = 0.05;
+        accept_error = 0.1;
 
-        turn_velocity = 0.2;
+        turn_velocity = 0.4;
         forward_velocity = 0.2;
         forward_limit = 4;
-        step_limit = 2;
+        step_limit = 4;
         time_step = 0.1;
         right_search_limit = 30;
-        DIST_CORRECTION = 1.1;
+        DIST_CORRECTION = 1.2;
+        stop_condition = 2000;
+        change_condition = 40;
     end 
     
     global LEN
-    global GRID_X
-    global GRID_Y
+    global GRID
+    global BASE_X
+    global BASE_Y
+    global NOT_CHANGE_COUNT
+    global STOP_COUNT
     LEN = 0.2;
-    GRID_X = containers.Map({0},{0});
-    GRID_Y = containers.Map({0},{GRID_X});
-    draw_grid();
+    GRID = zeros(2000, 2000);
+    BASE_X = -200;
+    BASE_Y = -200;
+    NOT_CHANGE_COUNT = 0;
+    STOP_COUNT = 0;
     %define state for the state machine
-    WANDERING           = 0;
+    LINGERING           = 0;
     W_FORWARDING     	= 1;
     W_TURNING           = 2;
     W_STEP              = 3;
 
-    current_state  = WANDERING;
-    next_state = WANDERING;
+    current_state  = LINGERING;
+    next_state = LINGERING;
     
     forward_count = 0;
     right_search_count = 0;
@@ -82,7 +89,7 @@ function hw3_team_19(serPort)
     m_a = 0;
     
     %stop condition
-    while 1
+    while NOT_CHANGE_COUNT ~= stop_condition
         pause(time_step);
         
         if ~(abs(m_x - X) < accept_error && abs(m_y - Y) < accept_error)
@@ -94,17 +101,24 @@ function hw3_team_19(serPort)
                 
         switch current_state
             
-            case WANDERING
+            case LINGERING
                 
                 if bumped
                     
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
+                    forward_count = 0;
                         
                     if occupied(X, Y)
                         
-                        turn_angle(serPort, turn_velocity, rand()*360);
-                        next_state = WANDERING;
+                        if BumpRight
+                            turn_angle(serPort, turn_velocity, 15+rand()*180);
+                        elseif BumpLeft
+                            turn_angle(serPort, turn_velocity, 120+rand()*180);
+                        elseif BumpFront
+                            turn_angle(serPort, turn_velocity, 90+rand()*180);
+                        end
+                        next_state = LINGERING;
                         
                     else
                         
@@ -118,16 +132,33 @@ function hw3_team_19(serPort)
                         
                     end
                     
+                elseif NOT_CHANGE_COUNT > change_condition
+                    
+                    SetFwdVelAngVelCreate(serPort, 0, 0);
+                    calculate_coord(serPort);
+                    forward_count = 0;
+                    NOT_CHANGE_COUNT = 0;
+                    turn_angle(serPort, turn_velocity, rand()*360);
+                    next_state = LINGERING;
+                    
+                elseif forward_count > forward_limit
+                    
+                    forward_count = 0;
+                    SetFwdVelAngVelCreate(serPort, 0, 0);
+                    update_grid(X, Y, 2);
+                    next_state = LINGERING;
+                    
                 else
                     
+                    forward_count = forward_count + 1;
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
                     update_grid(X, Y, 2);
-                    next_state = WANDERING;
+                    next_state = LINGERING;
                     
                 end
                 
-                fprintf('WANDERING : ');
+                fprintf('LINGERING : ');
                 print_status(m_x, m_y, m_a);
                 
             case W_FORWARDING
@@ -139,14 +170,16 @@ function hw3_team_19(serPort)
                     update_grid(X, Y, 1);
                     next_state = W_FORWARDING;
                     
-                elseif left && abs(m_x - X) < accept_error && abs(m_y - Y) < accept_error
+                elseif NOT_CHANGE_COUNT > change_condition || (left && abs(m_x - X) < accept_error && abs(m_y - Y) < accept_error)
 
                     fprintf('start wandering\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
                     update_grid(X, Y, 1);
+                    forward_count = 0;
+                    NOT_CHANGE_COUNT = 0;
                     turn_angle(serPort, turn_velocity, rand()*360);
-					next_state = WANDERING;
+					next_state = LINGERING;
                     
                 elseif forward_count > forward_limit
                     
@@ -208,15 +241,17 @@ function hw3_team_19(serPort)
                     update_grid(X, Y, 1);
                     next_state = W_FORWARDING;
                 
-                elseif left && abs(m_x - X) < accept_error && abs(m_y - Y) < accept_error
+                elseif NOT_CHANGE_COUNT > change_condition || (left && abs(m_x - X) < accept_error && abs(m_y - Y) < accept_error)
                     
                     fprintf('start wandering\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
                     update_grid(X, Y, 1);
+                    forward_count = 0;
+                    NOT_CHANGE_COUNT = 0;
                     turn_angle(serPort, turn_velocity, rand()*360);
-					next_state = WANDERING;
-                    
+					next_state = LINGERING;
+
                 elseif forward_count > step_limit
                     
                     SetFwdVelAngVelCreate(serPort, 0, 0);
@@ -246,7 +281,7 @@ function hw3_team_19(serPort)
     end %end of while loop
     
 	SetFwdVelAngVelCreate(serPort, 0, 0);
-	fprintf('%f %f\n', x, y);
+	fprintf('navigation over!\n');
 end
 
 function calculate_coord(serPort)
@@ -289,8 +324,13 @@ function turn_angle(serPort, turn_velocity, angle) %angle should always be posit
     fprintf('turning %.4f degress\n', angle);
     
     a = 0;
+    reverse = 1;
+    if angle > 180
+        angle = angle - 360;
+        reverse = -1;
+    end
     while abs(a) < abs(angle/360*2*pi)
-        SetFwdVelAngVelCreate(serPort, 0, turn_velocity);
+        SetFwdVelAngVelCreate(serPort, 0, reverse*turn_velocity);
         pause(time_step);
         a = a + AngleSensorRoomba(serPort);
     end
@@ -303,14 +343,22 @@ function print_status(m_x, m_y, m_a)
     global X
     global Y
     global ANGLE
-    fprintf('(%.4f, %.4f), ANGLE = %.4f, m:(%.4f, %.4f), a = %.4f\n\n', X, Y, ANGLE, m_x, m_y, m_a);
+    global NOT_CHANGE_COUNT
+    global STOP_COUNT
+    fprintf('(%.4f, %.4f), ANGLE = %.4f, not_change_count: %d, stop_count: %d, m:(%.4f, %.4f), a = %.4f\n\n', X, Y, ANGLE, NOT_CHANGE_COUNT, STOP_COUNT, m_x, m_y, m_a);
+end
+
+function [x_i, y_i] = grid_index(x, y)
+    global LEN
+    global BASE_X
+    global BASE_Y
+    x_i = floor((x - BASE_X)/LEN) + 1;
+    y_i = floor((y - BASE_Y)/LEN) + 1;
 end
 
 function is = occupied(x, y)
     global GRID
-    global LEN
-    x_i = floor(x/LEN) + 1;
-    y_i = floor(y/LEN) + 1;
+    [x_i, y_i] = grid_index(x, y);
     if GRID(y_i, x_i) == 1
         is = 1;
     else
@@ -318,36 +366,29 @@ function is = occupied(x, y)
     end
 end
 
-function draw_grid()
-    global GRID
-    global LEN
-    [height, width] = size(GRID);
-    for y_i = 1:height
-      for x_i = 1:width
-          x = [(x_i-1)*LEN, (x_i-1)*LEN, x_i*LEN, x_i*LEN];
-          y = [(y_i-1)*LEN, y_i*LEN, y_i*LEN, (y_i-1)*LEN];
-          figure(2);
-          patch(x, y, [1, 1, 1]);
-          axis square;
-      end
-    end
-end
-
 function update_grid(x, y, value)
     global GRID
     global LEN
-    x_i = floor(x/LEN) + 1;
-    y_i = floor(y/LEN) + 1;
-    if GRID(y_i, x_i) ~= 1
+    global BASE_X
+    global BASE_Y
+    global NOT_CHANGE_COUNT
+    global STOP_COUNT
+    [x_i, y_i] = grid_index(x, y);
+    if GRID(y_i, x_i) ~= 1 && GRID(y_i, x_i) ~= value
         GRID(y_i, x_i) = value;
-        x = [(x_i-1)*LEN, (x_i-1)*LEN, x_i*LEN, x_i*LEN];
-        y = [(y_i-1)*LEN, y_i*LEN, y_i*LEN, (y_i-1)*LEN];
+        xs = [(x_i-1)*LEN + BASE_X, (x_i-1)*LEN + BASE_X, x_i*LEN + BASE_X, x_i*LEN + BASE_X];
+        ys = [(y_i-1)*LEN + BASE_Y, y_i*LEN + BASE_Y, y_i*LEN + BASE_Y, (y_i-1)*LEN + BASE_Y];
         figure(2);
         if value == 1
-            patch(x, y, [1, 0, 0]);
+            patch(xs, ys, [1, 0, 0]);
         else
-            patch(x, y, [0, 0, 1]);
+            patch(xs, ys, [0, 0, 1]);
         end
         axis square;
+        NOT_CHANGE_COUNT = 0;
+        STOP_COUNT = 0;
+    else
+        NOT_CHANGE_COUNT = NOT_CHANGE_COUNT + 1;
+        STOP_COUNT = STOP_COUNT + 1;
     end
 end
