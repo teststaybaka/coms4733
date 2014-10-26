@@ -47,7 +47,7 @@ function hw3_team_19(serPort)
         DIST_CORRECTION = 1.2;
         stop_condition = 4000;
         change_condition = 80;
-        A_LEN = 0.1;
+        A_LEN = 0;
     end 
     
     global LEN
@@ -195,7 +195,6 @@ function hw3_team_19(serPort)
                     fprintf('Wall Following finished.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -216,7 +215,6 @@ function hw3_team_19(serPort)
                 elseif forward_count > forward_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = W_TURNING;
@@ -224,7 +222,9 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
+                    if forward_count == 1
+                        update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
+                    end
                     update_grid(X, Y, 2);
                     next_state = W_FORWARDING;
                 end
@@ -261,7 +261,6 @@ function hw3_team_19(serPort)
                     fprintf('Wall Following finished.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -282,7 +281,6 @@ function hw3_team_19(serPort)
                 elseif forward_count > step_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = W_TURNING;
@@ -290,7 +288,6 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = W_STEP;
                 end
@@ -338,7 +335,6 @@ function hw3_team_19(serPort)
                     fprintf('Target unreachable. %.4f %.4f\n', t_x, t_y);
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -363,13 +359,13 @@ function hw3_team_19(serPort)
                     SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
                     forward_count = 0;
+                    update_grid(X, Y, 2);
                     fprintf('change to m_moving: (%.4f %.4f) (%.4f %.4f) (%.4f %.4f) a:%.4f\n', X, Y, m_x, m_y, t_x, t_y, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                     turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                     next_state = M_MOVING;
                 elseif forward_count > forward_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = N_TURNING;
@@ -377,7 +373,9 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
+                    if forward_count == 1
+                        update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
+                    end
                     update_grid(X, Y, 2);
                     next_state = N_FORWARDING;
                 end
@@ -414,7 +412,6 @@ function hw3_team_19(serPort)
                     fprintf('Target unreachable.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -439,12 +436,12 @@ function hw3_team_19(serPort)
                     SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
                     forward_count = 0;
+                    update_grid(X, Y, 2);
                     turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                     next_state = M_MOVING;
                 elseif forward_count > step_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = N_TURNING;
@@ -452,7 +449,6 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = N_STEP;
                 end
