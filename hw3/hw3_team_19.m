@@ -168,7 +168,7 @@ function hw3_team_19(serPort)
                             break;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*180);
+                        turn_angle(serPort, turn_velocity, rand()*90);
                         next_state = LINGERING;
                     end
                 elseif forward_count > forward_limit
@@ -205,11 +205,11 @@ function hw3_team_19(serPort)
                             turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                             next_state = M_MOVING;
                         else
-                            turn_angle(serPort, turn_velocity, rand()*180);
+                            turn_angle(serPort, turn_velocity, rand()*90);
                             next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*180);
+                        turn_angle(serPort, turn_velocity, rand()*90);
                         next_state = LINGERING;
                     end
                 elseif forward_count > forward_limit
@@ -271,11 +271,11 @@ function hw3_team_19(serPort)
                             turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                             next_state = M_MOVING;
                         else
-                            turn_angle(serPort, turn_velocity, rand()*180);
+                            turn_angle(serPort, turn_velocity, rand()*90);
                             next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*180);
+                        turn_angle(serPort, turn_velocity, rand()*90);
                         next_state = LINGERING;
                     end
                 elseif forward_count > step_limit
@@ -348,14 +348,14 @@ function hw3_team_19(serPort)
                             m_a = ANGLE;
                             next_state = M_MOVING;
                         else
-                            turn_angle(serPort, turn_velocity, rand()*180);
+                            turn_angle(serPort, turn_velocity, rand()*90);
                             next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*180);
+                        turn_angle(serPort, turn_velocity, rand()*90);
                         next_state = LINGERING;
                     end
-                elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/2 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
+                elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/4 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
                     SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
                     forward_count = 0;
@@ -380,7 +380,7 @@ function hw3_team_19(serPort)
                     next_state = N_FORWARDING;
                 end
                 fprintf('N_FORWARDING : ');
-                print_status(m_x, m_y, m_a);
+                print_status(t_x, t_y, m_a);
                 
             case N_TURNING
                 hasWall = WallSensorReadRoomba(serPort);
@@ -425,14 +425,14 @@ function hw3_team_19(serPort)
                             m_a = ANGLE;
                             next_state = M_MOVING;
                         else
-                            turn_angle(serPort, turn_velocity, rand()*180);
+                            turn_angle(serPort, turn_velocity, rand()*90);
                             next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*180);
+                        turn_angle(serPort, turn_velocity, rand()*90);
                         next_state = LINGERING;
                     end
-                elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/2 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
+                elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/4 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
                     SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
                     forward_count = 0;
@@ -660,7 +660,7 @@ function [t_x, t_y, find] = pick_a_target(r_x, r_y)
     global BASE_Y
     global ANGLE
     global MARKS
-    dist_weight = 0.5;
+    dist_weight = 10;
     angle_weight = 1.0;
     [r_x_i, r_y_i] = grid_index(r_x, r_y);
     find = 0;
@@ -682,9 +682,10 @@ function [t_x, t_y, find] = pick_a_target(r_x, r_y)
                 a = a - 360;
             end
             a = abs(a)*angle_weight;
+            a = 0;
             if GRID(j, i) == 0 && MARKS(j - BOUND_LOWER_Y + 1, i - BOUND_LOWER_X + 1) == 1 ...
-               && dist - a > max
-                max = dist - a;
+               && -dist - a > max
+                max = -dist - a;
                 t_x = tt_x;
                 t_y = tt_y;
                 find = 1;
