@@ -15,6 +15,7 @@
 function hw3_team_19(serPort)
     global time_step
     global DIST_CORRECTION
+    global A_LEN
     
     try
         arg_check = strcmp(serPort.type, 'serial');
@@ -44,8 +45,9 @@ function hw3_team_19(serPort)
         time_step = 0.1;
         right_search_limit = 30;
         DIST_CORRECTION = 1.2;
-        stop_condition = 2000;
-        change_condition = 160;
+        stop_condition = 4000;
+        change_condition = 80;
+        A_LEN = 0.1;
     end 
     
     global LEN
@@ -62,8 +64,8 @@ function hw3_team_19(serPort)
     MARKS = zeros(1, 1);
     LEN = 0.4;
     GRID = zeros(2000, 2000);
-    BASE_X = -200;
-    BASE_Y = -200;
+    BASE_X = -400;
+    BASE_Y = -400;
     [BOUND_LOWER_X, BOUND_LOWER_Y] = grid_index(0, 0);
     BOUND_UPPER_X = BOUND_LOWER_X;
     BOUND_UPPER_Y = BOUND_LOWER_Y;
@@ -131,18 +133,14 @@ function hw3_team_19(serPort)
                                 break;
                             end
                         else
-                            [t_x, t_y, find] = pick_a_target(X, Y);
-                            if find
-                                turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
-                                next_state = M_MOVING;
-                            elseif BumpRight
-                                turn_angle(serPort, turn_velocity, 15+rand()*180);
+                            if BumpRight
+                                turn_angle(serPort, turn_velocity, 15+rand()*90);
                                 next_state = LINGERING;
                             elseif BumpLeft
-                                turn_angle(serPort, turn_velocity, 120+rand()*180);
+                                turn_angle(serPort, turn_velocity, 120+rand()*90);
                                 next_state = LINGERING;
-                            elseif BumpFront
-                                turn_angle(serPort, turn_velocity, 90+rand()*180);
+                            else% BumpFront
+                                turn_angle(serPort, turn_velocity, 90+rand()*90);
                                 next_state = LINGERING;
                             end
                         end
@@ -153,22 +151,6 @@ function hw3_team_19(serPort)
                         bump_turn(serPort, turn_velocity, BumpRight, BumpLeft, BumpFront);
                         left = 0;
                         next_state = W_FORWARDING;
-                    end
-                elseif left && occupied(X, Y, 0, 0, 0)
-                    SetFwdVelAngVelCreate(serPort, 0, 0);
-                    calculate_coord(serPort);
-                    forward_count = 0;
-                    m_x = X;
-                    m_y = Y;
-                    m_a = ANGLE;
-                    left = 0;
-                    [t_x, t_y, find] = pick_a_target(X, Y);
-                    if find
-                        turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
-                        next_state = M_MOVING;
-                    else
-                        turn_angle(serPort, turn_velocity, rand()*360);
-                        next_state = LINGERING;
                     end
                 elseif NOT_CHANGE_COUNT > change_condition
                     NOT_CHANGE_COUNT = 0;
@@ -186,7 +168,7 @@ function hw3_team_19(serPort)
                             break;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*360);
+                        turn_angle(serPort, turn_velocity, rand()*180);
                         next_state = LINGERING;
                     end
                 elseif forward_count > forward_limit
@@ -213,7 +195,7 @@ function hw3_team_19(serPort)
                     fprintf('Wall Following finished.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -224,16 +206,17 @@ function hw3_team_19(serPort)
                             turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                             next_state = M_MOVING;
                         else
-                            break;
+                            turn_angle(serPort, turn_velocity, rand()*180);
+                            next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*360);
+                        turn_angle(serPort, turn_velocity, rand()*180);
                         next_state = LINGERING;
                     end
                 elseif forward_count > forward_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = W_TURNING;
@@ -241,7 +224,7 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = W_FORWARDING;
                 end
@@ -278,7 +261,7 @@ function hw3_team_19(serPort)
                     fprintf('Wall Following finished.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -289,16 +272,17 @@ function hw3_team_19(serPort)
                             turn_angle(serPort, turn_velocity, -ANGLE/2/pi*360+atan2(t_y - Y, t_x - X)/2/pi*360);
                             next_state = M_MOVING;
                         else
-                            break;
+                            turn_angle(serPort, turn_velocity, rand()*180);
+                            next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*360);
+                        turn_angle(serPort, turn_velocity, rand()*180);
                         next_state = LINGERING;
                     end
                 elseif forward_count > step_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = W_TURNING;
@@ -306,7 +290,7 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = W_STEP;
                 end
@@ -325,6 +309,10 @@ function hw3_team_19(serPort)
                     forward_count = 0;
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
+                    detemineBounding();
+                    if withinBound(X, Y) && ~occupied(X, Y, 0, 0, 0);
+                        update_marks(X, Y);
+                    end
                     next_state = LINGERING;
                 elseif forward_count > forward_limit
                     forward_count = 0;
@@ -350,7 +338,7 @@ function hw3_team_19(serPort)
                     fprintf('Target unreachable. %.4f %.4f\n', t_x, t_y);
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -364,10 +352,11 @@ function hw3_team_19(serPort)
                             m_a = ANGLE;
                             next_state = M_MOVING;
                         else
-                            break;
+                            turn_angle(serPort, turn_velocity, rand()*180);
+                            next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*360);
+                        turn_angle(serPort, turn_velocity, rand()*180);
                         next_state = LINGERING;
                     end
                 elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/2 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
@@ -380,7 +369,7 @@ function hw3_team_19(serPort)
                 elseif forward_count > forward_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = N_TURNING;
@@ -388,7 +377,7 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+LEN/2*sin(ANGLE), Y-LEN/2*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)/2*sin(ANGLE), Y-(LEN+A_LEN)/2*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = N_FORWARDING;
                 end
@@ -425,7 +414,7 @@ function hw3_team_19(serPort)
                     fprintf('Target unreachable.\n');
                     SetFwdVelAngVelCreate(serPort, 0, 0);
                     calculate_coord(serPort);
-                    update_grid(X+LEN*sin(ANGLE), Y-LEN*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
                     detemineBounding();
@@ -439,10 +428,11 @@ function hw3_team_19(serPort)
                             m_a = ANGLE;
                             next_state = M_MOVING;
                         else
-                            break;
+                            turn_angle(serPort, turn_velocity, rand()*180);
+                            next_state = LINGERING;
                         end
                     else
-                        turn_angle(serPort, turn_velocity, rand()*360);
+                        turn_angle(serPort, turn_velocity, rand()*180);
                         next_state = LINGERING;
                     end
                 elseif left && abs(atan2(t_y-m_y, t_x-m_x) - atan2(t_y-Y, t_x-X)) < accept_error/2 && (abs(t_x - m_x) - accept_error > abs(t_x - X) || abs(t_y - m_y) - accept_error > abs(t_y - Y))
@@ -454,7 +444,7 @@ function hw3_team_19(serPort)
                 elseif forward_count > step_limit
 					SetFwdVelAngVelCreate(serPort, 0, 0);
 					calculate_coord(serPort);
-                    update_grid(X+LEN*sin(ANGLE), Y-LEN*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     forward_count = 0;
 					next_state = N_TURNING;
@@ -462,7 +452,7 @@ function hw3_team_19(serPort)
 					calculate_coord(serPort);
 					SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
 					forward_count = forward_count + 1;
-                    update_grid(X+LEN*sin(ANGLE), Y-LEN*cos(ANGLE), 1);
+                    update_grid(X+(LEN+A_LEN)*sin(ANGLE), Y-(LEN+A_LEN)*cos(ANGLE), 1);
                     update_grid(X, Y, 2);
                     next_state = N_STEP;
                 end
@@ -680,17 +670,25 @@ function [t_x, t_y, find] = pick_a_target(r_x, r_y)
     find = 0;
     t_x = r_x;
     t_y = r_y;
-    r_x_i = r_x_i - BOUND_LOWER_X + 1;
-    r_y_i = r_y_i - BOUND_LOWER_Y + 1;
     max = -10000000;
     
+    fprintf('picking target. %.4f %.4f %d %d; ', r_x, r_x, r_x_i, r_y_i);
     for j = BOUND_LOWER_Y:BOUND_UPPER_Y
         for i = BOUND_LOWER_X:BOUND_UPPER_X
             tt_x = BASE_X + i*LEN - LEN/2;
             tt_y = BASE_Y + j*LEN - LEN/2;
+            dist = (abs(r_x_i-i) + abs(r_y_i-j))*dist_weight;
+            a = (atan2(tt_y-r_y, tt_x-r_x) - ANGLE)/2/pi*360;
+            while(a < -180)
+                a = a + 360;
+            end
+            while(a >= 180)
+                a = a - 360;
+            end
+            a = abs(a)*angle_weight;
             if GRID(j, i) == 0 && MARKS(j - BOUND_LOWER_Y + 1, i - BOUND_LOWER_X + 1) == 1 ...
-               && (abs(r_x_i-i) + abs(r_y_i-j))*dist_weight - abs(atan2(tt_y-r_y, tt_x-r_x) - ANGLE)/2/pi*360*angle_weight > max
-                max = (abs(r_x_i-i) + abs(r_y_i-j))*dist_weight - abs(atan2(tt_y-r_y, tt_x-r_x) - ANGLE)/2/pi*360*angle_weight;
+               && dist - a > max
+                max = dist - a;
                 t_x = tt_x;
                 t_y = tt_y;
                 find = 1;
@@ -698,10 +696,11 @@ function [t_x, t_y, find] = pick_a_target(r_x, r_y)
                 GRID(j, i) = 3;
                 draw_grid(i, j, [0, 1, 0]);
             end
+            % fprintf('picking...:%d %d %.4f %.4f weight:%.4f %.4f max:%.4f', i, j, tt_x, tt_y, dist, a, max)
         end
     end
     
-    fprintf('picking target. %.4f %.4f\n', t_x, t_y);
+    fprintf('result: %.4f %.4f, weight: %.4f\n', t_x, t_y, max);
 end
 
 function has = inQueue(q, y_i, x_i)
@@ -718,6 +717,7 @@ function is = occupied(x, y, right, left, front)
     global GRID
     global LEN
     global ANGLE
+    global A_LEN
     if left || right || front
         if left
             a = ANGLE+120/360*2*pi;
@@ -726,8 +726,8 @@ function is = occupied(x, y, right, left, front)
         else % front
             a = ANGLE+90/360*2*pi;
         end
-        x = x+LEN*sin(a);
-        y = y-LEN*cos(a);
+        x = x+(LEN+A_LEN)*sin(a);
+        y = y-(LEN+A_LEN)*cos(a);
         [x_i, y_i] = grid_index(x, y);
         if GRID(y_i, x_i) == 1 || GRID(y_i, x_i) == 3
             is = 1;
