@@ -23,15 +23,18 @@ function hw3_team_19(serPort)
         if arg_check
             fprintf('Running on Roomba.\n');
             flag = 1;
-            accept_error = 0.03;
+            accept_error = 0.2;
 
-            turn_velocity = 0.03;
+            turn_velocity = 0.1;
             forward_velocity = 0.05;
             forward_limit = 10;
-            step_limit = 2;
+            step_limit = 4;
             time_step = 0.1;
             right_search_limit = 5;
             DIST_CORRECTION = 1;
+            stop_condition = 300;
+            change_condition = 20;
+            A_LEN = 0;
         end
     catch 
         fprintf('Running on simulator.\n');
