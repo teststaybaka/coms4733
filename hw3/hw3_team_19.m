@@ -32,8 +32,8 @@ function hw3_team_19(serPort)
             time_step = 0.1;
             right_search_limit = 5;
             DIST_CORRECTION = 1;
-            stop_condition = 300;
-            change_condition = 20;
+            stop_condition = 1000;
+            change_condition = 40;
             A_LEN = 0;
         end
     catch 
