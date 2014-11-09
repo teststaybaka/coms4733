@@ -27,6 +27,12 @@ def buble_sort(l):
 def multi_m_v(m, v):
 	return [m[0][0]*v[0]+m[0][1]*v[1], m[1][0]*v[0]+m[1][1]*v[1]]
 
+def cross(v1, v2):
+	return v1[0]*v2[1] - v1[1]*v2[0]
+
+def dot(v1, v2):
+	return v1[0]*v2[0] + v1[1]*v2[1]
+
 def sub_v_v(v1, v2):
 	return [v1[0]-v2[0], v1[1]-v2[1]]
 
@@ -37,12 +43,9 @@ def multi_v_n(v, n):
 	return [v[0]*n, v[1]*n]
 
 def nomalize(v):
-	l = v[0]*v[0]+v[1]*v[1]
+	l = dot(v, v)
 	l = math.sqrt(l)
 	return [v[0]/l, v[1]/l]
-
-def cross(v1, v2):
-	return v1[0]*v2[1] - v1[1]*v2[0]
 
 f = open('hw4_start_goal.txt', 'r')
 nums = f.readline().split()
@@ -108,22 +111,23 @@ for i in range(1, num_obstacles):
 		edge2 = sub_v_v(vers[(j+1)%len(vers)], vers[j])
 		edge1 = nomalize(edge1)
 		edge2 = nomalize(edge2)
-		while cross(edge1, edge2) > 0.0:
+		while cross(edge1, edge2) > 0.0001:
 			v1 = multi_m_v(rotN90_matrix, edge1)
 			v1 = multi_v_n(v1, radius)
 			v1 = add_v_v(v1, vers[j])
-			print 'v1', v1
+			extended_vertices.append(v1)
+			# print 'v1', v1#, edge1
 			draw.point((v1[0]*scale + imlen/2.0, v1[1]*scale + imlen/2.0), 'blue')
 			edge1 = multi_m_v(rotInterval_matrix, edge1)
 
 		v2 = multi_m_v(rotN90_matrix, edge2)
 		v2 = multi_v_n(v2, radius)
 		v2 = add_v_v(v2, vers[j])
-		print 'v2', v2
+		extended_vertices.append(v2)
+		# print 'v2', v2#, edge2
 		draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
 
 	extended_data.append(extended_vertices)
-
 
 
 
