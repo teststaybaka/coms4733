@@ -83,7 +83,7 @@ rotInterval_matrix = [[math.cos(invertal_angle), -math.sin(invertal_angle)], [ma
 # v = [3,3]
 # print multi_m_v(rotN90_matrix, v)
 
-scale = imlen/float(max_x)
+scale = imlen/2/float(max_x)
 for i in range(0, num_obstacles):
 	#buble_sort(data[i])
 	vers = data[i]
@@ -95,7 +95,6 @@ for i in range(0, num_obstacles):
 			fill=int(255.0/len(vers)*j))
 
 extended_data = []
-print cross([2,2],[2,2])
 for i in range(1, num_obstacles):
 	buble_sort(data[i])
 	vers = data[i]
@@ -115,7 +114,7 @@ for i in range(1, num_obstacles):
 			v1 = multi_m_v(rotN90_matrix, edge1)
 			v1 = multi_v_n(v1, radius)
 			v1 = add_v_v(v1, vers[j])
-			extended_vertices.append(v1)
+			extended_vertices.append(v1 + [-1, -1, 1000000.0, 0])
 			# print 'v1', v1#, edge1
 			draw.point((v1[0]*scale + imlen/2.0, v1[1]*scale + imlen/2.0), 'blue')
 			edge1 = multi_m_v(rotInterval_matrix, edge1)
@@ -123,12 +122,47 @@ for i in range(1, num_obstacles):
 		v2 = multi_m_v(rotN90_matrix, edge2)
 		v2 = multi_v_n(v2, radius)
 		v2 = add_v_v(v2, vers[j])
-		extended_vertices.append(v2)
+		extended_vertices.append(v2 + [-1, -1, 1000000.0, 0])
 		# print 'v2', v2#, edge2
 		draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
 
 	extended_data.append(extended_vertices)
 
+extended_data.append([start + [-1, -1, 0, 0], goal + [-1, -1, 10000000.0, 0]])
 
+while True:
+	minimum = 10000000.0
+	for i in range(0, len(extended_data)):
+		vers = extended_data[i]
+		for j in range(0, len(vers)):
+			if vers[j][4] < minimum and vers[j][5] == 0:
+				minimum = vers[j][4]
+				cur = [i, j]
+	print 'find', cur
+	extended_data[cur[0]][cur[1]][5] = 1
+	if extended_data[cur[0]][cur[1]][0] == goal[0] and extended_data[cur[0]][cur[1]][1] == goal[1]:
+		break
+
+	for i in range(0, len(extended_data)):
+		vers = extended_data[i]
+		for j in range(0, len(vers)):
+			if vers[j][5] == 0:
+				dist = math.sqrt(dot(vers[j], vers[j]) + dot(extended_data[cur[0]][cur[1]], extended_data[cur[0]][cur[1]]))
+				if dist + extended_data[cur[0]][cur[1]][4] < vers[j][4]:
+					vers[j][4] = dist + extended_data[cur[0]][cur[1]][4]
+					vers[j][2] = cur[0]
+					vers[j][3] = cur[1]
+
+while True:
+	next_cur = [extended_data[cur[0]][cur[1]][2], extended_data[cur[0]][cur[1]][3]]
+	draw.line((extended_data[cur[0]][cur[1]][0]*scale + imlen/2.0, 
+		extended_data[cur[0]][cur[1]][1]*scale + imlen/2.0, 
+		extended_data[next_cur[0]][next_cur[1]][0]*scale + imlen/2.0,
+		extended_data[next_cur[0]][next_cur[1]][1]*scale + imlen/2.0,),
+		fill=0)
+	print 'res', cur, extended_data[cur[0]][cur[1]], next_cur
+	cur = next_cur
+	if extended_data[cur[0]][cur[1]][4] == 0:
+		break
 
 im.save('pic.bmp')
