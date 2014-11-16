@@ -25,4 +25,6 @@ function route_finding(file_goal, file_obstacles)
     for j = 1:num_obstacles
         h = patch(reshape(obs(j).vertices(:,1), [], 1), reshape(obs(j).vertices(:,2), [], 1), c);
     end
+    
+    
 end
