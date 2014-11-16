@@ -55,7 +55,7 @@ def test_inner(data, draw):
 	global imlen
 	# v1 = [-0.035071, 0.528185]
 	# v2 = [-0.135071, 0.554979]
-	v1 = extended_data[2][0]
+	v1 = extended_data[2][15]
 	v2 = extended_data[3][14]
 	draw.line((v1[0]*scale + imlen/2.0, 
 			v1[1]*scale + imlen/2.0, 
@@ -75,11 +75,13 @@ def test_inner(data, draw):
 			# print vers[j][0], vers[j][1], v1[0], v1[1]
 			if vers[j][0] == v1[0] and vers[j][1] == v1[1]:
 				# print 'equal', cross(sub_v_v(vers[(j-1)%len(vers)], v1), sub_v_v(v2, v1)), cross(sub_v_v(vers[(j+1)%len(vers)], v1), sub_v_v(v2, v1))
-				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) > 0.00001:
+				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) > 0:
 					return True
 			#intersection:
-			if cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 \
-				and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < -0.00001:
+			if i == 3 and j == 2:
+				print 'intersection', cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))), cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))
+			if cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 \
+				and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < 0:
 				print i, j, cross(sub_v_v(vers[j], v1), sub_v_v(v2, v1)), cross(sub_v_v(vers[(j+1)%len(vers)], v1), sub_v_v(v2, v1))
 				draw.point((v1[0]*scale + imlen/2.0, v1[1]*scale + imlen/2.0), 'red')
 				draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'red')
@@ -93,13 +95,13 @@ def test_inner(data, draw):
 				print 'here'
 				return True
 			if abs(cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))) < 0.00001 \
-				and cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 \
-				and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])), normalize(sub_v_v(v2, v1))) < -0.00001:
+				and cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 \
+				and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])), normalize(sub_v_v(v2, v1))) < 0:
 				return True
-			# if i == 3 and j == 2:
-			# 	print 'test', abs(cross(sub_v_v(vers[j], v1), sub_v_v(v2, v1))), cross(sub_v_v(v1, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j])), cross(sub_v_v(v2, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j])), cross(sub_v_v(v1, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j]))*cross(sub_v_v(v2, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j]))
-			# 	print 'condition', abs(cross(sub_v_v(vers[j], v1), sub_v_v(v2, v1))) < 0.00001, cross(sub_v_v(v1, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j]))*cross(sub_v_v(v2, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j])) < -0.00001
-			if abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))) < 0.00001 and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < -0.00001:
+			if i == 3 and j == 2:
+				print 'test', abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1))))#, sub_v_v(vers[(j+1)%len(vers)], vers[j])), cross(sub_v_v(v2, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j])), cross(sub_v_v(v1, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j]))*cross(sub_v_v(v2, vers[j]), sub_v_v(vers[(j+1)%len(vers)], vers[j]))
+				print 'condition', abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))) < 0.00001, cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < -0.00001
+			if abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))) < 0.00001 and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < 0:
 				return True
 			
 	return False
@@ -114,24 +116,24 @@ def intersected_or_inner(i1, i2, data):
 
 			if vers[j][0] == v1[0] and vers[j][1] == v1[1]:
 				# print 'equal', cross(sub_v_v(vers[(j-1)%len(vers)], v1), sub_v_v(v2, v1)), cross(sub_v_v(vers[(j+1)%len(vers)], v1), sub_v_v(v2, v1))
-				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) > 0.00001:
+				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) > 0:
 					# print 'here'
 					return True
 			#intersection:
-			if cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 \
-				and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < -0.00001:
+			if cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 \
+				and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < 0:
 				return True
 			if abs(cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))) < 0.00001 \
-				and cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < -0.00001 \
-				and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])), normalize(sub_v_v(v2, v1))) < -0.00001:
+				and cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))*cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 \
+				and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])), normalize(sub_v_v(v2, v1))) < 0:
 				return True
-			if abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))) < 0.00001 and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < -0.00001:
+			if abs(cross(normalize(sub_v_v(vers[j], v1)), normalize(sub_v_v(v2, v1)))) < 0.00001 and cross(normalize(sub_v_v(v1, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j])))*cross(normalize(sub_v_v(v2, vers[j])), normalize(sub_v_v(vers[(j+1)%len(vers)], vers[j]))) < 0:
 				return True
 
 	return False
 
-# f = open('hw4_start_goal.txt', 'r')
-f = open('start_end.txt', 'r')
+f = open('hw4_start_goal.txt', 'r')
+# f = open('start_end.txt', 'r')
 nums = f.readline().split()
 start = [float(nums[0]), float(nums[1])]
 nums = f.readline().split()
