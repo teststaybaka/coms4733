@@ -1,9 +1,14 @@
-function hw4_team_19()
+function hw4_team_19(serPort)
     global X
     global Y
     global ANGLE
     global time_step
     time_step = 0.1;
+    
+    turn_velocity = 0.1;
+    accept_dist_error = 0.1;
+    accept_angle_error = 0.05;
+    forward_velocity = 0.1;
     
     f = fopen('route.res');
     sizeA = [2 Inf];
@@ -18,9 +23,37 @@ function hw4_team_19()
         t_x = A(1, len-i);
         t_y = A(2, len-i);
         
-        atan2(t_y - y, t_x - x);
+        while sqrt((t_x - x)*(t_x - x) + (t_y - y)*(t_y - y)) > accept_dist_error
+            calculate_coord(serPort);
+            t_a = atan2(t_y - y, t_x - x);
+            while abs(ANGLE - t_a) > accept_angle_error
+                SetFwdVelAngVelCreate(serPort, 0, 0);
+                a = t_a - ANGLE;
+                turn_angle(serPort, turn_velocity, a/pi*180);
+            end
+            SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+            pause(time_step);
+        end
     end
     
+end
+
+function calculate_coord(serPort)
+    global X
+    global Y
+    global ANGLE
+    dist = DistanceSensorRoomba(serPort);
+    a = AngleSensorRoomba(serPort);
+    ANGLE = ANGLE + a;
+    
+	while ANGLE > pi
+		ANGLE = ANGLE - 2*pi;
+	end
+	while ANGLE < -pi
+		ANGLE = ANGLE + 2*pi;
+	end
+	X = X + dist*cos(ANGLE);
+	Y = Y + dist*sin(ANGLE);
 end
 
 function turn_angle(serPort, turn_velocity, angle)
