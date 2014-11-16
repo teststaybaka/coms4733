@@ -132,8 +132,8 @@ def intersected_or_inner(i1, i2, data):
 
 	return False
 
-f = open('hw4_start_goal.txt', 'r')
-# f = open('start_end.txt', 'r')
+# f = open('hw4_start_goal.txt', 'r')
+f = open('start_end.txt', 'r')
 nums = f.readline().split()
 start = [float(nums[0]), float(nums[1])]
 nums = f.readline().split()
