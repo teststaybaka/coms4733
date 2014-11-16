@@ -130,16 +130,16 @@ def intersected_or_inner(i1, i2, data):
 
 	return False
 
-f = open('hw4_start_goal.txt', 'r')
-# f = open('start_end.txt', 'r')
+# f = open('hw4_start_goal.txt', 'r')
+f = open('start_end.txt', 'r')
 nums = f.readline().split()
 start = [float(nums[0]), float(nums[1])]
 nums = f.readline().split()
 goal = [float(nums[0]), float(nums[1])]
 f.close()
 
-# f = open('testing_env.txt', 'r')
-f = open('hw4_world_and_obstacles_convex.txt', 'r')
+f = open('testing_env.txt', 'r')
+# f = open('hw4_world_and_obstacles_convex.txt', 'r')
 num_obstacles = int(f.readline())
 data = []
 max_x = -10000000.0
@@ -161,7 +161,7 @@ f.close()
 
 print max_x
 
-radius = 0.2
+radius = 0.215
 rotN90_matrix = [[0.0,1.0],[-1.0,0.0]]
 invertal_angle = 30.0/360*2*math.pi
 rotInterval_matrix = [[math.cos(invertal_angle), -math.sin(invertal_angle)], [math.sin(invertal_angle), math.cos(invertal_angle)]]
