@@ -198,16 +198,7 @@ for i in range(1, num_obstacles):
 		draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
 
 	extended_data.append(extended_vertices)
-
-# for i in range(0, len(extended_data)):
-# 	vers = extended_data[i]
-# 	for j in range(0, len(vers)):
-# 		draw.line((vers[j][0]*scale + imlen/2.0, 
-# 			vers[j][1]*scale + imlen/2.0, 
-# 			vers[(j+1)%len(vers)][0]*scale + imlen/2.0, 
-# 			vers[(j+1)%len(vers)][1]*scale + imlen/2.0), 
-# 			fill=(0,0,255))
-
+	
 extended_data.append([start + [-1, -1, 0, 0], goal + [-1, -1, 10000000.0, 0]])
 
 # print test_inner(extended_data, draw)
@@ -262,6 +253,7 @@ while True:
 					vers[j][3] = cur[1]
 	# im.save('pic.bmp')
 
+f = open('route.res', 'w');
 while True:
 	next_cur = [extended_data[cur[0]][cur[1]][2], extended_data[cur[0]][cur[1]][3]]
 	draw.line((extended_data[cur[0]][cur[1]][0]*scale + imlen/2.0, 
@@ -270,8 +262,11 @@ while True:
 		extended_data[next_cur[0]][next_cur[1]][1]*scale + imlen/2.0,),
 		fill=0)
 	print 'res', cur, extended_data[cur[0]][cur[1]], next_cur
+	f.write(str(extended_data[cur[0]][cur[01]][0]) + ' ' + str(extended_data[cur[0]][cur[01]][1]) + '\n')
 	cur = next_cur
 	if extended_data[cur[0]][cur[1]][4] == 0:
 		break
 
+f.write(str(extended_data[cur[0]][cur[01]][0]) + ' ' + str(extended_data[cur[0]][cur[01]][1]) + '\n')
+f.close()
 im.save('pic.bmp')
