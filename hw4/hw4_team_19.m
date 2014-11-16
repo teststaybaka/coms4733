@@ -19,23 +19,25 @@ function hw4_team_19(serPort)
     X = A(1, len);
     Y = A(2, len);
     ANGLE = pi/2;
+    rotate_count = 0;
     for i = 1:len-1
         t_x = A(1, len-i);
         t_y = A(2, len-i);
         
-        while sqrt((t_x - x)*(t_x - x) + (t_y - y)*(t_y - y)) > accept_dist_error
+        while sqrt((t_x - X)*(t_x - X) + (t_y - Y)*(t_y - Y)) > accept_dist_error
             calculate_coord(serPort);
-            t_a = atan2(t_y - y, t_x - x);
+            t_a = atan2(t_y - Y, t_x - X);
             while abs(ANGLE - t_a) > accept_angle_error
                 SetFwdVelAngVelCreate(serPort, 0, 0);
                 a = t_a - ANGLE;
                 turn_angle(serPort, turn_velocity, a/pi*180);
+                rotate_count = rotate_count + 1;
             end
             SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
             pause(time_step);
         end
     end
-    
+    rotate_count
 end
 
 function calculate_coord(serPort)
