@@ -163,7 +163,7 @@ f.close()
 
 print max_x
 
-radius = 0.215
+radius = 0.3
 rotN90_matrix = [[0.0,1.0],[-1.0,0.0]]
 invertal_angle = 30.0/360*2*math.pi
 rotInterval_matrix = [[math.cos(invertal_angle), -math.sin(invertal_angle)], [math.sin(invertal_angle), math.cos(invertal_angle)]]
@@ -204,20 +204,15 @@ for i in range(1, num_obstacles):
 		# print theta1, theta2
 		if theta2 < theta1:
 			theta2 += 360
-		if theta1 == theta2:
-			continue
 		# print theta1, theta2
 		# anything = sys.stdin.readline()
-		while True:
+		while theta1 != theta2:
 			# anything = sys.stdin.readline()
 			theta1 += 45
 			point = [vers[j][0] + radius*math.cos(theta1/180.0*math.pi), vers[j][1] + radius*math.sin(theta1/180.0*math.pi)]
 			theta1 += 45
 			# print theta1, theta2
-			if theta1 > theta2:
-				break
 			extended_vertices.append(point + [-1, -1, 10000000.0, 0])
-			draw.point((point[0]*scale + imlen/2.0, point[1]*scale + imlen/2.0), 'blue')
 
 		# edge1 = sub_v_v(vers[j], vers[(j-1)%len(vers)])
 		# edge2 = sub_v_v(vers[(j+1)%len(vers)], vers[j])
@@ -246,6 +241,7 @@ for i in range(1, num_obstacles):
 			extended_vertices[(j+1)%len(extended_vertices)][0]*scale + imlen/2.0, 
 			extended_vertices[(j+1)%len(extended_vertices)][1]*scale + imlen/2.0), 
 			(0,0,int(255.0/len(extended_vertices)*j)))
+		draw.point((extended_vertices[j][0]*scale + imlen/2.0, extended_vertices[j][1]*scale + imlen/2.0), 'green')
 	extended_data.append(extended_vertices)
 	
 extended_data.append([start + [-1, -1, 0, 0], goal + [-1, -1, 10000000.0, 0]])
