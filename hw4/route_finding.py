@@ -132,8 +132,8 @@ def intersected_or_inner(i1, i2, data):
 
 	return False
 
-f = open('hw4_start_goal.txt', 'r')
-# f = open('start_end.txt', 'r')
+# f = open('hw4_start_goal.txt', 'r')
+f = open('start_end.txt', 'r')
 nums = f.readline().split()
 start = [float(nums[0]), float(nums[1])]
 nums = f.readline().split()
@@ -191,28 +191,61 @@ for i in range(1, num_obstacles):
 			vers[j][1]*scale + imlen/2.0, 
 			vers[(j+1)%len(vers)][0]*scale + imlen/2.0, 
 			vers[(j+1)%len(vers)][1]*scale + imlen/2.0), 
-			fill=int(255.0/len(vers)*j))	
+			fill=int(255.0/len(vers)*j))
 
-		edge1 = sub_v_v(vers[j], vers[(j-1)%len(vers)])
+		edge1 = sub_v_v(vers[(j-1)%len(vers)], vers[j])
+		theta1 = math.atan2(edge1[1], edge1[0])/math.pi*180
 		edge2 = sub_v_v(vers[(j+1)%len(vers)], vers[j])
-		edge1 = normalize(edge1)
-		edge2 = normalize(edge2)
-		while cross(edge1, edge2) > 0.0001:
-			v1 = multi_m_v(rotN90_matrix, edge1)
-			v1 = multi_v_n(v1, radius)
-			v1 = add_v_v(v1, vers[j])
-			extended_vertices.append(v1 + [-1, -1, 10000000.0, 0])
-			# print 'v1', v1#, edge1
-			draw.point((v1[0]*scale + imlen/2.0, v1[1]*scale + imlen/2.0), 'blue')
-			edge1 = multi_m_v(rotInterval_matrix, edge1)
+		theta2 = math.atan2(edge2[1], edge2[0])/math.pi*180
 
-		v2 = multi_m_v(rotN90_matrix, edge2)
-		v2 = multi_v_n(v2, radius)
-		v2 = add_v_v(v2, vers[j])
-		extended_vertices.append(v2 + [-1, -1, 10000000.0, 0])
+		# print theta1, theta2
+		theta1 = int(math.ceil(theta1/90) * 90)
+		theta2 = int(math.floor(theta2/90) * 90)
+		# print theta1, theta2
+		if theta2 < theta1:
+			theta2 += 360
+		if theta1 == theta2:
+			continue
+		# print theta1, theta2
+		# anything = sys.stdin.readline()
+		while True:
+			# anything = sys.stdin.readline()
+			theta1 += 45
+			point = [vers[j][0] + radius*math.cos(theta1/180.0*math.pi), vers[j][1] + radius*math.sin(theta1/180.0*math.pi)]
+			theta1 += 45
+			# print theta1, theta2
+			if theta1 > theta2:
+				break
+			extended_vertices.append(point + [-1, -1, 10000000.0, 0])
+			draw.point((point[0]*scale + imlen/2.0, point[1]*scale + imlen/2.0), 'blue')
+
+		# edge1 = sub_v_v(vers[j], vers[(j-1)%len(vers)])
+		# edge2 = sub_v_v(vers[(j+1)%len(vers)], vers[j])
+		# edge1 = normalize(edge1)
+		# edge2 = normalize(edge2)
+		# while cross(edge1, edge2) > 0.0001:
+		# 	v1 = multi_m_v(rotN90_matrix, edge1)
+		# 	v1 = multi_v_n(v1, radius)
+		# 	v1 = add_v_v(v1, vers[j])
+		# 	extended_vertices.append(v1 + [-1, -1, 10000000.0, 0])
+		# 	# print 'v1', v1#, edge1
+		# 	draw.point((v1[0]*scale + imlen/2.0, v1[1]*scale + imlen/2.0), 'blue')
+		# 	edge1 = multi_m_v(rotInterval_matrix, edge1)
+
+		# v2 = multi_m_v(rotN90_matrix, edge2)
+		# v2 = multi_v_n(v2, radius)
+		# v2 = add_v_v(v2, vers[j])
+		# extended_vertices.append(v2 + [-1, -1, 10000000.0, 0])
 		# print 'v2', v2#, edge2
-		draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
+		# draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
 
+	buble_sort(extended_vertices)
+	for j in range(0, len(extended_vertices)):
+		draw.line((extended_vertices[j][0]*scale + imlen/2.0, 
+			extended_vertices[j][1]*scale + imlen/2.0, 
+			extended_vertices[(j+1)%len(extended_vertices)][0]*scale + imlen/2.0, 
+			extended_vertices[(j+1)%len(extended_vertices)][1]*scale + imlen/2.0), 
+			(0,0,int(255.0/len(extended_vertices)*j)))
 	extended_data.append(extended_vertices)
 	
 extended_data.append([start + [-1, -1, 0, 0], goal + [-1, -1, 10000000.0, 0]])
