@@ -5,8 +5,8 @@ function hw4_team_19(serPort)
     global time_step
     time_step = 0.1;
     
-    turn_velocity = 0.1;
-    accept_dist_error = 0.2;
+    turn_velocity = 0.075;
+    accept_dist_error = 0.1;
     accept_angle_error = 0.1;
     forward_velocity = 0.2;
     
