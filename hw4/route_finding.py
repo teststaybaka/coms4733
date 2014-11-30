@@ -55,8 +55,8 @@ def test_inner(data, draw):
 	global imlen
 	# v1 = [-0.035071, 0.528185]
 	# v2 = [-0.135071, 0.554979]
-	v1 = extended_data[2][15]
-	v2 = extended_data[3][14]
+	v1 = extended_data[6][2]
+	v2 = extended_data[6][0]
 	draw.line((v1[0]*scale + imlen/2.0, 
 			v1[1]*scale + imlen/2.0, 
 			v2[0]*scale + imlen/2.0,
@@ -106,17 +106,23 @@ def test_inner(data, draw):
 			
 	return False
 
-def intersected_or_inner(i1, i2, data):
+def intersected_or_inner(i1, i2, data, sur_vers):
 	v1 = data[i1[0]][i1[1]]
 	v2 = data[i2[0]][i2[1]]
 	
-	for i in range(0, len(data)-1):
+	for i in range(0, len(data)):
 		vers = data[i]
+		if i == len(data) - 1:
+			vers = sur_vers
 		for j in range(0, len(vers)):
 
 			if vers[j][0] == v1[0] and vers[j][1] == v1[1]:
 				# print 'equal', cross(sub_v_v(vers[(j-1)%len(vers)], v1), sub_v_v(v2, v1)), cross(sub_v_v(vers[(j+1)%len(vers)], v1), sub_v_v(v2, v1))
 				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) < 0 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v1)), normalize(sub_v_v(v2, v1))) > 0:
+					# print 'here'
+					return True
+			if vers[j][0] == v2[0] and vers[j][1] == v2[1]:
+				if cross(normalize(sub_v_v(vers[(j-1)%len(vers)], v2)), normalize(sub_v_v(v1, v2))) < 0 and cross(normalize(sub_v_v(vers[(j+1)%len(vers)], v2)), normalize(sub_v_v(v1, v2))) > 0:
 					# print 'here'
 					return True
 			#intersection:
@@ -132,16 +138,16 @@ def intersected_or_inner(i1, i2, data):
 
 	return False
 
-# f = open('hw4_start_goal.txt', 'r')
-f = open('start_end.txt', 'r')
+f = open('hw4_start_goal.txt', 'r')
+# f = open('start_end.txt', 'r')
 nums = f.readline().split()
 start = [float(nums[0]), float(nums[1])]
 nums = f.readline().split()
 goal = [float(nums[0]), float(nums[1])]
 f.close()
 
-f = open('testing_env.txt', 'r')
-# f = open('hw4_world_and_obstacles_convex.txt', 'r')
+# f = open('testing_env.txt', 'r')
+f = open('hw4_world_and_obstacles_convex.txt', 'r')
 num_obstacles = int(f.readline())
 data = []
 max_x = -10000000.0
@@ -163,7 +169,7 @@ f.close()
 
 print max_x
 
-radius = 0.3
+radius = 0.28
 rotN90_matrix = [[0.0,1.0],[-1.0,0.0]]
 invertal_angle = 30.0/360*2*math.pi
 rotInterval_matrix = [[math.cos(invertal_angle), -math.sin(invertal_angle)], [math.sin(invertal_angle), math.cos(invertal_angle)]]
@@ -171,6 +177,11 @@ rotInterval_matrix = [[math.cos(invertal_angle), -math.sin(invertal_angle)], [ma
 # print multi_m_v(rotN90_matrix, v)
 
 scale = imlen/2/float(max_x)
+
+reverse = []
+for j in range(0, len(data[0])):
+	reverse.append(data[0][len(data[0]) - 1 - j])
+data[0] = reverse
 for i in range(0, num_obstacles):
 	#buble_sort(data[i])
 	vers = data[i]
@@ -234,15 +245,20 @@ for i in range(1, num_obstacles):
 		# print 'v2', v2#, edge2
 		# draw.point((v2[0]*scale + imlen/2.0, v2[1]*scale + imlen/2.0), 'blue')
 
+	vertices = []
 	buble_sort(extended_vertices)
 	for j in range(0, len(extended_vertices)):
-		draw.line((extended_vertices[j][0]*scale + imlen/2.0, 
-			extended_vertices[j][1]*scale + imlen/2.0, 
-			extended_vertices[(j+1)%len(extended_vertices)][0]*scale + imlen/2.0, 
-			extended_vertices[(j+1)%len(extended_vertices)][1]*scale + imlen/2.0), 
-			(0,0,int(255.0/len(extended_vertices)*j)))
-		draw.point((extended_vertices[j][0]*scale + imlen/2.0, extended_vertices[j][1]*scale + imlen/2.0), 'green')
-	extended_data.append(extended_vertices)
+		if abs(cross(normalize(sub_v_v(extended_vertices[(j-1)%len(extended_vertices)], extended_vertices[j])), normalize(sub_v_v(extended_vertices[(j+1)%len(extended_vertices)], extended_vertices[j])))) > 0.1:
+			vertices.append(extended_vertices[j])
+
+	for j in range(0, len(vertices)):
+		draw.line((vertices[j][0]*scale + imlen/2.0, 
+			vertices[j][1]*scale + imlen/2.0, 
+			vertices[(j+1)%len(vertices)][0]*scale + imlen/2.0, 
+			vertices[(j+1)%len(vertices)][1]*scale + imlen/2.0), 
+			(100,100,int(255.0/len(vertices)*j)))
+		draw.point((vertices[j][0]*scale + imlen/2.0, vertices[j][1]*scale + imlen/2.0), 'green')
+	extended_data.append(vertices)
 	
 extended_data.append([start + [-1, -1, 0, 0], goal + [-1, -1, 10000000.0, 0]])
 
@@ -266,7 +282,7 @@ while True:
 	# 		extended_data[last_i][last_j][1]*scale + imlen/2.0, 
 	# 		extended_data[cur[0]][cur[1]][0]*scale + imlen/2.0,
 	# 		extended_data[cur[0]][cur[1]][1]*scale + imlen/2.0,),
-	# 		fill=(0,150,150))
+	# 		fill=(0,250,0))
 	# print 'previous', extended_data[cur[0]][cur[1]][2], extended_data[cur[0]][cur[1]][3]
 	# draw.point((extended_data[cur[0]][cur[1]][0]*scale + imlen/2.0, extended_data[cur[0]][cur[1]][1]*scale + imlen/2.0), 'red')
 	# draw.point((extended_data[2][6][0]*scale + imlen/2.0, extended_data[2][6][1]*scale + imlen/2.0), 'red')
@@ -289,9 +305,14 @@ while True:
 		vers = extended_data[i]
 		for j in range(0, len(vers)):
 			if vers[j][5] == 0:
-				if intersected_or_inner(cur, [i, j], extended_data):
+				if intersected_or_inner(cur, [i, j], extended_data, reverse):
 					dist = 10000000.0
 				else:
+					draw.line((vers[j][0]*scale + imlen/2.0, 
+								vers[j][1]*scale + imlen/2.0, 
+								extended_data[cur[0]][cur[1]][0]*scale + imlen/2.0,
+								extended_data[cur[0]][cur[1]][1]*scale + imlen/2.0,),
+								fill=(200,200,255))
 					l = sub_v_v(extended_data[cur[0]][cur[1]], vers[j])
 					dist = math.sqrt(dot(l, l))
 				if dist + extended_data[cur[0]][cur[1]][4] < vers[j][4]:
@@ -307,7 +328,7 @@ while True:
 		extended_data[cur[0]][cur[1]][1]*scale + imlen/2.0, 
 		extended_data[next_cur[0]][next_cur[1]][0]*scale + imlen/2.0,
 		extended_data[next_cur[0]][next_cur[1]][1]*scale + imlen/2.0,),
-		fill=0)
+		fill=(0,0,0))
 	print 'res', cur, extended_data[cur[0]][cur[1]], next_cur
 	f.write(str(extended_data[cur[0]][cur[01]][0]) + ' ' + str(extended_data[cur[0]][cur[01]][1]) + '\n')
 	cur = next_cur

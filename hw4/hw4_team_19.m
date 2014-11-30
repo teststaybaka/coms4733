@@ -1,3 +1,17 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMS 4733 - Computational Aspect of Robotics
+%
+%	Columbia University FALL 2014 
+%
+%	Team    : 19
+%	Members : Yuxuan Xie 				        (yx2284)
+%             Xusheng Gao 				        (xg2193)
+%		      Zachary Hideichi Watanabe-Gastel	(zhw2102)
+%
+%	Homework Assignment 4
+%	Using the iRobot Create Matlab Simulator and the iRobot Create
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function hw4_team_19(serPort)
     global X
     global Y
