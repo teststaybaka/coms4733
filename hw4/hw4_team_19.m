@@ -20,9 +20,9 @@ function hw4_team_19(serPort)
     time_step = 0.1;
     
     turn_velocity = 0.075;
-    accept_dist_error = 0.1;
-    accept_angle_error = 0.1;
-    forward_velocity = 0.2;
+    accept_dist_error = 0.05;
+    accept_angle_error = 0.05;
+    forward_velocity = 0.25;
     
     f = fopen('route.res');
     sizeA = [2 Inf];
@@ -32,7 +32,7 @@ function hw4_team_19(serPort)
     len = size(A, 2);
     X = A(1, len);
     Y = A(2, len);
-    ANGLE = pi/2;
+    ANGLE = pi/2.0;
     rotate_count = 0;
     DistanceSensorRoomba(serPort);
     AngleSensorRoomba(serPort);
@@ -41,15 +41,28 @@ function hw4_team_19(serPort)
         t_x = A(1, len-i);
         t_y = A(2, len-i);
         
+        fprintf('tx = %f, ty = %f\n', t_x, t_y);
+        
+        if i == len-1
+            t_y = t_y + 0.1;
+        end
+        
         while sqrt((t_x - X)*(t_x - X) + (t_y - Y)*(t_y - Y)) > accept_dist_error
             t_a = atan2(t_y - Y, t_x - X);
+            count = 0;
             while abs(ANGLE - t_a) > accept_angle_error*1/sqrt((t_x - X)*(t_x - X) + (t_y - Y)*(t_y - Y))
                 SetFwdVelAngVelCreate(serPort, 0, 0);
                 a = t_a - ANGLE;
                 %turn_angle(serPort, turn_velocity, a/pi*180);
-                turnAngle(serPort, turn_velocity, a/pi*180);
+                turnAngle(serPort, turn_velocity, a/pi*180.0);
                 calculate_coord(serPort);
                 rotate_count = rotate_count + 1;
+                fprintf('turning a = %f\n', ANGLE/pi*180.0);
+                count = count + 1;
+                
+                if count > 2
+                    break;
+                end
             end
             SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
             pause(time_step);
@@ -73,10 +86,10 @@ function calculate_coord(serPort)
     ANGLE = ANGLE + a;
     
 	while ANGLE > pi
-		ANGLE = ANGLE - 2*pi;
+		ANGLE = ANGLE - 2.0*pi;
 	end
 	while ANGLE < -pi
-		ANGLE = ANGLE + 2*pi;
+		ANGLE = ANGLE + 2.0*pi;
 	end
 	X = X + dist*cos(ANGLE);
 	Y = Y + dist*sin(ANGLE);
@@ -89,7 +102,7 @@ function turn_angle(serPort, turn_velocity, angle)
     a = 0;
     reverse = 1;
     while angle > 360
-        angle = angle - 360;
+        angle = angle - 360.0;
     end
     while angle <= 0
         angle = angle + 360;
