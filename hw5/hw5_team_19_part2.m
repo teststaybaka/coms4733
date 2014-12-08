@@ -89,11 +89,13 @@ function hw5_team_19_part2( serPort )
             forward_paces(serPort, forward_velocity, 10);
             turn_angle(serPort, turn_velocity, 15);
         elseif max_width > size(im, 2) - size(im, 2)*margin_w
-            break
-        elseif BumpFront
-            turn_angle(serPort, turn_velocity, 90);
-            forward_paces(serPort, forward_velocity, 10);
-            turn_angle(serPort, turn_velocity, -90);
+            if BumpFront
+                break
+            else
+                turn_angle(serPort, turn_velocity, 90);
+                forward_paces(serPort, forward_velocity, 10);
+                turn_angle(serPort, turn_velocity, -90);
+            end
         elseif cw == 0 && ch == 0
             turn_angle(serPort, turn_velocity, 180*rand() - 90);
             forward_paces(serPort, forward_velocity, 16*rand() + 2);

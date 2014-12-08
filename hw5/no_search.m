@@ -8,7 +8,7 @@
 %             Xusheng Gao 				        (xg2193)
 %		      Zachary Hideichi Watanabe-Gastel	(zhw2102)
 %
-%	Homework Assignment 4
+%	Homework Assignment 5
 %	Using the iRobot Create Matlab Simulator and the iRobot Create
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import java.util.LinkedList
