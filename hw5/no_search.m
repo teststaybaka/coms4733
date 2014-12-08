@@ -11,8 +11,8 @@
 %	Homework Assignment 5
 %	Using the iRobot Create Matlab Simulator and the iRobot Create
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% im = double(imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd='));
+clear
+im = double(imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd='));
 figure(1)
 imshow(uint8(im))
 threshold = 0.02;
@@ -24,8 +24,8 @@ imshow(uint8(smim));
 [x, y] = ginput
 % x = [124;125;152]
 % y = [204;172;192]
-x = uint8(x);
-y = uint8(y);
+x = uint32(x);
+y = uint32(y);
 im_hsl = rgb2hsl(smim);
 figure(3)
 imshow(uint8(im_hsl(:,:,1)*255))
@@ -34,10 +34,10 @@ H_max = 0;
 H_min = 1;
 for i = 1:size(x, 1)
     if im_hsl(y(i), x(i), 1) > H_max
-        H_max = im_hsl(y(i), x(i), 1);
+        H_max = im_hsl(y(i), x(i), 1)
     end
     if im_hsl(y(i), x(i), 1) < H_min
-        H_min = im_hsl(y(i), x(i), 1);
+        H_min = im_hsl(y(i), x(i), 1)
     end
 end
 H_max = H_max + threshold;
@@ -141,6 +141,7 @@ for j = 1:size(im, 2)
 %     k
 %     imshow(uint8(im_label*255.0/(k-1)));
 end
+k
 % equivalent_pair
 % ch = ch/total_num;
 % cw = cw/total_num;
@@ -177,8 +178,8 @@ for j = 1:size(im, 2)
         max_height = height;
     end
 end
-ch = uint8(ch/total_num)
-cw = uint8(cw/total_num)
+ch = uint32(ch/total_num)
+cw = uint32(cw/total_num)
 
 smim(ch, cw, :) = [0,0,0];
 smim(ch, cw-1, :) = [0,0,0];

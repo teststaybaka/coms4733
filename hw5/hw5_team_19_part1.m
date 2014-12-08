@@ -1,14 +1,15 @@
 function hw5_team_19_part1( serPort )
-    turn_velocity = 0.075;
+    turn_velocity = 0.05;
     time_step = 0.1;
-    forward_velocity = 0.1;
     margin_w = 0.1;
     margin_h = 0.05;
-    turn_k = 0.001;
-    forward_k = 0.1; 
+    turn_k = 0.1;
+    forward_k = 1.5;
+    forward_velocity = 0.1;
+    angle_error = 0.7;
 
     im = imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd=');
-    figure(1)
+    %figure(1)
     imshow(uint8(im))
     for i = 1:3
         smim(:,:,i) = gaussfilt(im(:,:,i), 0.8);
@@ -16,13 +17,13 @@ function hw5_team_19_part1( serPort )
     figure(2)
     imshow(uint8(smim));
     [x, y] = ginput
-    x = uint8(x);
-    y = uint8(y);
+    x = uint32(x);
+    y = uint32(y);
     im_hsl = rgb2hsl(smim);
-    figure(3)
+    %figure(3)
     imshow(uint8(im_hsl(:,:,1)*255))
 
-    threshold = 0.02;
+    threshold = 0.05;
     H_max = 0;
     H_min = 1;
     for i = 1:size(x, 1)
@@ -44,14 +45,22 @@ function hw5_team_19_part1( serPort )
     H_max
     H_min
 
+    [im_label, index] = blob_find(im_hsl, H_min, H_max);
     max_height = 0;
     for j = 1:size(im, 2)
-        height = 0;
+        min_i = size(im, 1);
+        max_i = 0;
         for i = 1:size(im, 1)
-            if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
-                height = height + 1;
+            if im_label(i, j) == index
+                if i < min_i
+                    min_i = i;
+                end
+                if i > max_i
+                    max_i = i;
+                end
             end
         end
+        height = max_i - min_i;
         if height > max_height
             max_height = height;
         end
@@ -71,21 +80,28 @@ function hw5_team_19_part1( serPort )
         total_num = 0.0;
         max_height = 0;
         for j = 1:size(im, 2)
-            height = 0;
+            min_i = size(im, 1);
+            max_i = 0;
             for i = 1:size(im, 1)
                 if im_label(i, j) == index
                     ch = ch + i;
                     cw = cw + j;
-                    height = height + 1;
+                    if i < min_i
+                        min_i = i;
+                    end
+                    if i > max_i
+                        max_i = i;
+                    end
                     total_num = total_num + 1;
                 end
             end
+            height = max_i - min_i;
             if height > max_height
                 max_height = height;
             end
         end
-        ch = uint8(ch/total_num)
-        cw = uint8(cw/total_num)
+        ch = uint32(ch/total_num);
+        cw = uint32(cw/total_num)
 
         smim(ch, cw, :) = [0,0,0];
         smim(ch, cw-1, :) = [0,0,0];
@@ -95,30 +111,41 @@ function hw5_team_19_part1( serPort )
         figure(5)
         imshow(uint8(smim));
         
-        if cw < size(im, 2)/2 - size(im, 2)*margin_w
-            turn = (size(im, 2)/2 - cw)*turn_k*turn_velocity;
-            SetFwdVelAngVelCreate(serPort, 0, turn);
-        elseif cw > size(im, 2)/2 + size(im, 2)*margin_w
-            turn = (cw - size(im, 2)/2)*turn_k*turn_velocity;
-            SetFwdVelAngVelCreate(serPort, 0, -turn);
-        elseif max_height > ori_height + size(im, 1)*margin_h
-            forward = (max_height - ori_height)*forward_k*forward_velocity;
-            SetFwdVelAngVelCreate(serPort, -forward, 0);
-        elseif max_height < ori_height - size(im, 1)*margin_h
-            forward = (ori_height - max_height)*forward_k*forward_velocity;
-            SetFwdVelAngVelCreate(serPort, forward, 0);
+        angle = (double(size(im, 2)/2) - double(cw))*turn_k
+        if abs(angle) > angle_error
+            turnAngle(serPort, turn_velocity, angle);
+        else
+            ori_height
+            max_height
+            paces = (double(ori_height) - double(max_height))*forward_k
+            if abs(paces) > 8
+                forward_v = (paces / abs(paces)) * forward_velocity;
+                paces = abs(paces);
+                paces = int32(paces+0.5);
+                forward_paces(serPort, forward_v, paces);
+            end
         end
-        pause(time_step);
-        SetFwdVelAngVelCreate(serPort, 0, 0);
+       
+            
+%             SetFwdVelAngVelCreate(serPort, 0, -turn);
+%         elseif max_height > ori_height + size(im, 1)*margin_h
+%             forward = (max_height - ori_height)*forward_k*forward_velocity;
+%             SetFwdVelAngVelCreate(serPort, -forward, 0);
+%         elseif max_height < ori_height - size(im, 1)*margin_h
+%             forward = (ori_height - max_height)*forward_k*forward_velocity;
+%             SetFwdVelAngVelCreate(serPort, forward, 0);
+
+%         pause(time_step);
+%         SetFwdVelAngVelCreate(serPort, 0, 0);
     end
 end
 
 function [im_label, index] = blob_find(im_hsl, H_min, H_max)
-    im_label = zeros(size(im, 1), size(im, 2));
+    im_label = zeros(size(im_hsl, 1), size(im_hsl, 2));
     k = 1;
     equivalent_pair = [];
-    for j = 1:size(im, 2)
-        for i = 1:size(im, 1)
+    for j = 1:size(im_hsl, 2)
+        for i = 1:size(im_hsl, 1)
             if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
                 if i-1 > 0 && j-1 > 0
                     if im_label(i-1, j) ~= 0 && im_label(i, j-1) == 0
@@ -203,8 +230,8 @@ function [im_label, index] = blob_find(im_hsl, H_min, H_max)
     % cw = cw/total_num;
 
     blob_size = zeros(1, k);
-    for j = 1:size(im, 2)
-        for i = 1:size(im, 1)
+    for j = 1:size(im_hsl, 2)
+        for i = 1:size(im_hsl, 1)
             if im_label(i, j) ~= 0
                 im_label(i, j) = equivalent_pair(im_label(i, j));
                 blob_size(im_label(i, j)) = blob_size(im_label(i, j)) + 1;
@@ -215,5 +242,46 @@ function [im_label, index] = blob_find(im_hsl, H_min, H_max)
     k
     imshow(uint8(im_label*255.0/(k-1)));
 
-    [c, index] = max(blob_size)
+    [c, index] = max(blob_size);
+end
+
+function turn_angle(serPort, turn_velocity, angle)
+    global time_step
+    fprintf('turning %.4f degress', angle);
+    a = 0;
+    reverse = 1;
+    while angle > 360
+        angle = angle - 360.0;
+    end
+    while angle <= 0
+        angle = angle + 360;
+    end
+    if angle > 180
+        angle = angle - 360;
+        reverse = -1;
+    end
+    fprintf(', modified %.4f degress\n', angle);
+    while abs(a) < abs(angle/360*2*pi)
+        SetFwdVelAngVelCreate(serPort, 0, reverse*turn_velocity);
+        pause(time_step);
+        a = a + AngleSensorRoomba(serPort);
+        while a > pi
+            a = a - 2*pi;
+        end
+        while a < -pi
+            a = a + 2*pi;
+        end
+    end
+    SetFwdVelAngVelCreate(serPort, 0, 0);
+    a = a + AngleSensorRoomba(serPort);
+end
+
+function forward_paces(serPort, forward_velocity, paces)
+    global time_step
+    for i = 1:paces
+        
+    SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+        pause(time_step);
+    end
+    SetFwdVelAngVelCreate(serPort, 0, 0);
 end

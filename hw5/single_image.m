@@ -13,7 +13,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import java.util.LinkedList
 
-% im = double(imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd='));
+im = double(imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd='));
 figure(4)
 imshow(im)
 threshold = 0.02;
@@ -59,6 +59,7 @@ H_min
 marks = zeros(size(im, 1), size(im, 2));
 res = [];
 count = 0;
+tic
 for i = 1:size(im, 1)
     for j = 1:size(im, 2)
         if (marks(i, j) == 0)
@@ -112,6 +113,7 @@ for i = 1:size(im, 1)
         end
     end
 end
+toc
 max_index = 0;
 max_num = 0;
 for i = 1:size(res, 1)
