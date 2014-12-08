@@ -221,13 +221,8 @@ function [im_label, index] = blob_find(im_hsl, H_min, H_max)
     %     figure(4);
     %     k
     %     imshow(uint8(im_label*255.0/(k-1)));
-    %     figure(4);
-    %     k
-    %     imshow(uint8(im_label*255.0/(k-1)));
     end
     % equivalent_pair
-    % ch = ch/total_num;
-    % cw = cw/total_num;
 
     blob_size = zeros(1, k);
     for j = 1:size(im_hsl, 2)
