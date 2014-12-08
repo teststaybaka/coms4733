@@ -6,20 +6,20 @@ function hw5_team_19_part1( serPort )
     margin_h = 0.05;
     turn_k = 0.001;
     forward_k = 0.1; 
-    
-    import java.util.LinkedList
-    
+
     im = imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd=');
+    figure(1)
+    imshow(uint8(im))
     for i = 1:3
         smim(:,:,i) = gaussfilt(im(:,:,i), 0.8);
     end
-    figure(1)
+    figure(2)
     imshow(uint8(smim));
     [x, y] = ginput
     x = uint8(x);
     y = uint8(y);
     im_hsl = rgb2hsl(smim);
-    figure(2)
+    figure(3)
     imshow(uint8(im_hsl(:,:,1)*255))
 
     threshold = 0.02;
@@ -64,6 +64,8 @@ function hw5_team_19_part1( serPort )
             smim(:,:,i) = gaussfilt(im(:,:,i), 0.8);
         end
         im_hsl = rgb2hsl(smim);
+        [im_label, index] = blob_find(im_hsl, H_min, H_max);
+        
         ch = 0;
         cw = 0;
         total_num = 0.0;
@@ -71,7 +73,7 @@ function hw5_team_19_part1( serPort )
         for j = 1:size(im, 2)
             height = 0;
             for i = 1:size(im, 1)
-                if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
+                if im_label(i, j) == index
                     ch = ch + i;
                     cw = cw + j;
                     height = height + 1;
@@ -82,15 +84,15 @@ function hw5_team_19_part1( serPort )
                 max_height = height;
             end
         end
-        ch = ch/total_num;
-        cw = cw/total_num;
+        ch = uint8(ch/total_num)
+        cw = uint8(cw/total_num)
 
         smim(ch, cw, :) = [0,0,0];
         smim(ch, cw-1, :) = [0,0,0];
         smim(ch-1, cw, :) = [0,0,0];
         smim(ch, cw+1, :) = [0,0,0];
         smim(ch+1, cw, :) = [0,0,0];
-        figure(3);
+        figure(5)
         imshow(uint8(smim));
         
         if cw < size(im, 2)/2 - size(im, 2)*margin_w
@@ -109,4 +111,109 @@ function hw5_team_19_part1( serPort )
         pause(time_step);
         SetFwdVelAngVelCreate(serPort, 0, 0);
     end
+end
+
+function [im_label, index] = blob_find(im_hsl, H_min, H_max)
+    im_label = zeros(size(im, 1), size(im, 2));
+    k = 1;
+    equivalent_pair = [];
+    for j = 1:size(im, 2)
+        for i = 1:size(im, 1)
+            if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
+                if i-1 > 0 && j-1 > 0
+                    if im_label(i-1, j) ~= 0 && im_label(i, j-1) == 0
+                        im_label(i, j) = im_label(i-1, j);
+                    end
+                    if im_label(i, j-1) ~= 0 && im_label(i-1, j) == 0
+                        im_label(i, j) = im_label(i, j-1);
+                    end
+                    if im_label(i, j-1) ~= 0 && im_label(i-1, j) ~= 0
+                        im_label(i, j) = im_label(i, j-1);
+                        if im_label(i, j-1) < im_label(i-1, j)
+                            s = im_label(i, j-1);
+                            l = im_label(i-1, j);
+                        else
+                            s = im_label(i-1, j);
+                            l = im_label(i, j-1);
+                        end
+                        m = equivalent_pair(s);
+                        count = 0;
+                        while l ~= equivalent_pair(l)
+                            l = equivalent_pair(l);
+                            count = count + 1;
+                        end
+    %                     count
+                        assert(count < 2);
+                        if m ~= l
+                            assert(s ~= l);
+                            if m > l
+                                t = m;
+                                m = l;
+                                l = t;
+                            end
+                            for z = 1:size(equivalent_pair, 2)
+                                if equivalent_pair(z) == m
+                                    equivalent_pair(z) = l;
+                                end
+                            end
+                            equivalent_pair(m) = l;
+    %                         equivalent_pair
+    %                         equivalent_pair(m)
+                        end
+                    end
+                    if im_label(i, j-1) == 0 && im_label(i-1, j) == 0
+                        im_label(i, j) = k;
+                        equivalent_pair(k) = k;
+                        k = k + 1;
+                    end
+                elseif i-1 > 0 && j-1 <= 0
+                    if im_label(i-1, j) ~= 0
+                        im_label(i, j) = im_label(i-1, j);
+                    end
+                    if im_label(i-1, j) == 0
+                        im_label(i, j) = k;
+                        equivalent_pair(k) = k;
+                        k = k + 1;
+                    end
+                elseif i-1 <= 0 && j-1 > 0
+                    if im_label(i, j-1) ~= 0
+                        im_label(i, j) = im_label(i, j-1);
+                    end
+                    if im_label(i, j-1) == 0
+                        im_label(i, j) = k;
+                        equivalent_pair(k) = k;
+                        k = k + 1;
+                    end
+                else
+                    im_label(i, j) = k;
+                    equivalent_pair(k) = k;
+                    k = k + 1;
+                end
+            end
+        end
+    %     figure(4);
+    %     k
+    %     imshow(uint8(im_label*255.0/(k-1)));
+    %     figure(4);
+    %     k
+    %     imshow(uint8(im_label*255.0/(k-1)));
+    end
+    % equivalent_pair
+    % ch = ch/total_num;
+    % cw = cw/total_num;
+
+    blob_size = zeros(1, k);
+    for j = 1:size(im, 2)
+        for i = 1:size(im, 1)
+            if im_label(i, j) ~= 0
+                im_label(i, j) = equivalent_pair(im_label(i, j));
+                blob_size(im_label(i, j)) = blob_size(im_label(i, j)) + 1;
+            end
+        end
+    end
+    figure(4);
+    k
+    imshow(uint8(im_label*255.0/(k-1)));
+
+    [c, index] = max(blob_size)
 end
