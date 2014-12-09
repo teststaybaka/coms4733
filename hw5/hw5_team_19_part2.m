@@ -4,7 +4,7 @@ function hw5_team_19_part2( serPort )
     time_step = 0.1;
     forward_velocity = 0.1;
     [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-        
+    
     %manually determine the color to track
     im = imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd=');
     for i = 1:3
@@ -13,13 +13,13 @@ function hw5_team_19_part2( serPort )
     figure(1)
     imshow(uint8(smim));
     [x, y] = ginput
-    x = uint8(x);
-    y = uint8(y);
+    x = uint32(x);
+    y = uint32(y);
     im_hsl = rgb2hsl(smim);
     figure(2)
     imshow(uint8(im_hsl(:,:,1)*255))
 
-    threshold = 0.02;
+    threshold = 0.05;
     H_max = 0;
     H_min = 1;
     for i = 1:size(x, 1)
@@ -50,20 +50,29 @@ function hw5_team_19_part2( serPort )
             smim(:,:,i) = gaussfilt(im(:,:,i), 0.8);
         end
         im_hsl = rgb2hsl(smim);
+        [im_label, index] = blob_find(im_hsl, H_min, H_max);
+        
         ch = 0;
         cw = 0;
         total_num = 0.0;
         max_width = 0;
         for i = 1:size(im, 1)
-            width = 0;
+            max_j = 0;
+            min_j = size(im, 2);
             for j = 1:size(im, 2)
-                if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
+                if im_label == index
                     ch = ch + i;
                     cw = cw + j;
-                    width = width + 1;
+                    if j < min_j
+                        min_j = j;
+                    end
+                    if j > max_j
+                        max_j = j;
+                    end
                     total_num = total_num + 1;
                 end
             end
+            width = max_j - min_j;
             if width > max_width
                 max_width = width;
             end
@@ -115,7 +124,29 @@ function hw5_team_19_part2( serPort )
     end
     
     %knock the door
-    
+    state = 0;
+    count = 0;
+    while 1
+        [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+        bumped = BumpRight || BumpLeft || BumpFront;
+        if state == 0
+            if bumped
+                SetFwdVelAngVelCreate(serPort, 0, 0);
+                BeepRoomba(serPort);
+                state = 1;
+            else
+                SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+                pause(time_step);
+            end
+        else
+            forward_paces(serPort, -forward_velocity, 40);
+            state = 0;
+            count = count + 1;
+        end
+        if count > 3
+            break
+        end
+    end
     
     %check if it's opened
     while 1
@@ -124,20 +155,29 @@ function hw5_team_19_part2( serPort )
             smim(:,:,i) = gaussfilt(im(:,:,i), 0.8);
         end
         im_hsl = rgb2hsl(smim);
+        [im_label, index] = blob_find(im_hsl, H_min, H_max);
+        
         ch = 0;
         cw = 0;
         total_num = 0.0;
         max_width = 0;
         for i = 1:size(im, 1)
-            width = 0;
+            max_j = 0;
+            min_j = size(im, 2);
             for j = 1:size(im, 2)
-                if im_hsl(i, j, 1) > H_min && im_hsl(i, j, 1) < H_max
+                if im_label == index
                     ch = ch + i;
                     cw = cw + j;
-                    width = width + 1;
+                    if j < min_j
+                        min_j = j;
+                    end
+                    if j > max_j
+                        max_j = j;
+                    end
                     total_num = total_num + 1;
                 end
             end
+            width = max_j - min_j;
             if width > max_width
                 max_width = width;
             end
@@ -150,7 +190,7 @@ function hw5_team_19_part2( serPort )
         smim(ch-1, cw, :) = [0,0,0];
         smim(ch, cw+1, :) = [0,0,0];
         smim(ch+1, cw, :) = [0,0,0];
-        figure(4);
+        figure(3);
         imshow(uint8(smim));
         
         if max_width < size(im, 2)/3.0*2 && ...
@@ -160,45 +200,5 @@ function hw5_team_19_part2( serPort )
     end
     
     %enter the room
-    forward_paces(serPort, forward_velocity, 20);
-end
-
-function forward_paces(serPort, forward_velocity, paces)
-    global time_step
-    SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
-    for i = 1:paces
-        pause(time_step);
-    end
-    SetFwdVelAngVelCreate(serPort, 0, 0);
-end
-
-function turn_angle(serPort, turn_velocity, angle)
-    global time_step
-    fprintf('turning %.4f degress', angle);
-    a = 0;
-    reverse = 1;
-    while angle > 360
-        angle = angle - 360.0;
-    end
-    while angle <= 0
-        angle = angle + 360;
-    end
-    if angle > 180
-        angle = angle - 360;
-        reverse = -1;
-    end
-    fprintf(', modified %.4f degress\n', angle);
-    while abs(a) < abs(angle/360*2*pi)
-        SetFwdVelAngVelCreate(serPort, 0, reverse*turn_velocity);
-        pause(time_step);
-        a = a + AngleSensorRoomba(serPort);
-        while a > pi
-            a = a - 2*pi;
-        end
-        while a < -pi
-            a = a + 2*pi;
-        end
-    end
-    SetFwdVelAngVelCreate(serPort, 0, 0);
-    a = a + AngleSensorRoomba(serPort);
+    forward_paces(serPort, forward_velocity, 80);
 end
