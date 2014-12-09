@@ -80,45 +80,40 @@ function hw5_team_19_part2( serPort )
         ch = ch/total_num;
         cw = cw/total_num;
 
-        smim(ch, cw, :) = [0,0,0];
-        smim(ch, cw-1, :) = [0,0,0];
-        smim(ch-1, cw, :) = [0,0,0];
-        smim(ch, cw+1, :) = [0,0,0];
-        smim(ch+1, cw, :) = [0,0,0];
+        if ch > 1 && ch < size(im, 1) && cw > 1 && cw < size(im, 2)
+            smim(ch, cw, :) = [0,0,0];
+            smim(ch, cw-1, :) = [0,0,0];
+            smim(ch-1, cw, :) = [0,0,0];
+            smim(ch, cw+1, :) = [0,0,0];
+            smim(ch+1, cw, :) = [0,0,0];
+        end
         figure(3);
         imshow(uint8(smim));
         
+        angle = (double(size(im, 2)/2) - double(cw))*turn_k;
         [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
         if BumpRight
-            turn_angle(serPort, turn_velocity, 15);
-            forward_paces(serPort, forward_velocity, 10);
-            turn_angle(serPort, turn_velocity, -15);
+            turnAngle(serPort, turn_velocity, 15);
+            forward_paces(serPort, forward_velocity, 20);
+            turnAngle(serPort, turn_velocity, -15);
         elseif BumpLeft
-            turn_angle(serPort, turn_velocity, -15);
-            forward_paces(serPort, forward_velocity, 10);
-            turn_angle(serPort, turn_velocity, 15);
-        elseif max_width > size(im, 2) - size(im, 2)*margin_w
-            if BumpFront
-                break
-            else
-                turn_angle(serPort, turn_velocity, 90);
-                forward_paces(serPort, forward_velocity, 10);
-                turn_angle(serPort, turn_velocity, -90);
-            end
-        elseif cw == 0 && ch == 0
+            turnAngle(serPort, turn_velocity, -15);
+            forward_paces(serPort, forward_velocity, 20);
+            turnAngle(serPort, turn_velocity, 15);
+        elseif max_width > size(im, 2) - size(im, 2)*margin_w && BumpFront
+            break
+        elseif BumpFront
+            turnAngle(serPort, turn_velocity, 90);
+            forward_paces(serPort, forward_velocity, 20);
+            turnAngle(serPort, turn_velocity, -90);
+        elseif cw == 0
             turn_angle(serPort, turn_velocity, 180*rand() - 90);
             forward_paces(serPort, forward_velocity, 16*rand() + 2);
-        elseif cw < size(im, 2)/2 - size(im, 2)*margin_w
-            turn = (size(im, 2)/2 - cw)*turn_k*turn_velocity;
-            SetFwdVelAngVelCreate(serPort, 0, turn);
-            pause(time_step);
-            SetFwdVelAngVelCreate(serPort, 0, 0);
-        elseif cw > size(im, 2)/2 + size(im, 2)*margin_w
-            turn = (cw - size(im, 2)/2)*turn_k*turn_velocity;
-            SetFwdVelAngVelCreate(serPort, 0, -turn);
-            pause(time_step);
-            SetFwdVelAngVelCreate(serPort, 0, 0);
+        elseif abs(angle) > angle_error
+            angle
+            turnAngle(serPort, turn_velocity, angle);
         else
+            fprintf('not supposed to be here\n');
             forward_paces(serPort, forward_velocity, 1);
         end
     end
@@ -185,11 +180,13 @@ function hw5_team_19_part2( serPort )
         ch = ch/total_num;
         cw = cw/total_num;
 
-        smim(ch, cw, :) = [0,0,0];
-        smim(ch, cw-1, :) = [0,0,0];
-        smim(ch-1, cw, :) = [0,0,0];
-        smim(ch, cw+1, :) = [0,0,0];
-        smim(ch+1, cw, :) = [0,0,0];
+        if ch > 1 && ch < size(im, 1) && cw > 1 && cw < size(im, 2)
+            smim(ch, cw, :) = [0,0,0];
+            smim(ch, cw-1, :) = [0,0,0];
+            smim(ch-1, cw, :) = [0,0,0];
+            smim(ch, cw+1, :) = [0,0,0];
+            smim(ch+1, cw, :) = [0,0,0];
+        end
         figure(3);
         imshow(uint8(smim));
         
@@ -200,5 +197,23 @@ function hw5_team_19_part2( serPort )
     end
     
     %enter the room
-    forward_paces(serPort, forward_velocity, 80);
+    count = 0;
+    while 1
+        [BumpRight, BumpLeft, ~ , ~, ~, BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
+        if BumpRight
+            turnAngle(serPort, turn_velocity, 15);
+        elseif BumpLeft
+            turnAngle(serPort, turn_velocity, -15);
+        elseif BumpFront
+            turnAngle(serPort, turn_velocity, 90);
+        else
+            SetFwdVelAngVelCreate(serPort, forward_velocity, 0);
+            count = count + 1;
+        end
+            
+        if count > 80
+            break
+        end
+    end
+    SetFwdVelAngVelCreate(serPort, 0, 0);
 end
