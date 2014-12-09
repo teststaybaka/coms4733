@@ -46,26 +46,8 @@ function hw5_team_19_part1( serPort )
     H_min
 
     [im_label, index] = blob_find(im_hsl, H_min, H_max);
-    max_height = 0;
-    for j = 1:size(im, 2)
-        min_i = size(im, 1);
-        max_i = 0;
-        for i = 1:size(im, 1)
-            if im_label(i, j) == index
-                if i < min_i
-                    min_i = i;
-                end
-                if i > max_i
-                    max_i = i;
-                end
-            end
-        end
-        height = max_i - min_i;
-        if height > max_height
-            max_height = height;
-        end
-    end
-    ori_height = max_height;
+    [~, ~, height, ~] = center_point(im_label, index);
+    ori_height = height;
 
     while 1
         im = imread('http://192.168.0.102/snapshot.cgi?user=admin&pwd=');
@@ -74,34 +56,9 @@ function hw5_team_19_part1( serPort )
         end
         im_hsl = rgb2hsl(smim);
         [im_label, index] = blob_find(im_hsl, H_min, H_max);
-        
-        ch = 0;
-        cw = 0;
-        total_num = 0.0;
-        max_height = 0;
-        for j = 1:size(im, 2)
-            min_i = size(im, 1);
-            max_i = 0;
-            for i = 1:size(im, 1)
-                if im_label(i, j) == index
-                    ch = ch + i;
-                    cw = cw + j;
-                    if i < min_i
-                        min_i = i;
-                    end
-                    if i > max_i
-                        max_i = i;
-                    end
-                    total_num = total_num + 1;
-                end
-            end
-            height = max_i - min_i;
-            if height > max_height
-                max_height = height;
-            end
-        end
-        ch = uint32(ch/total_num);
-        cw = uint32(cw/total_num)
+        [ch, cw, height, ~] = center_point(im_label, index);
+        ch = uint32(ch);
+        cw = uint32(cw);
 
         smim(ch, cw, :) = [0,0,0];
         smim(ch, cw-1, :) = [0,0,0];
@@ -116,8 +73,8 @@ function hw5_team_19_part1( serPort )
             turnAngle(serPort, turn_velocity, angle);
         else
             ori_height
-            max_height
-            paces = (double(ori_height) - double(max_height))*forward_k
+            height
+            paces = (double(ori_height) - double(height))*forward_k
             if abs(paces) > 8
                 forward_v = (paces / abs(paces)) * forward_velocity;
                 paces = abs(paces);
