@@ -107,7 +107,7 @@ function hw5_team_19_part2( serPort )
             forward_paces(serPort, forward_velocity, 20);
             turnAngle(serPort, turn_velocity, -90);
         elseif cw == 0
-            turn_angle(serPort, turn_velocity, 180*rand() - 90);
+            turnAngle(serPort, turn_velocity, 180*rand() - 90);
             forward_paces(serPort, forward_velocity, 16*rand() + 2);
         elseif abs(angle) > angle_error
             angle
