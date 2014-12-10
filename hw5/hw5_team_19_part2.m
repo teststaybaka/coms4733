@@ -1,3 +1,16 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMS 4733 - Computational Aspect of Robotics
+%
+%	Columbia University FALL 2014 
+%
+%	Team    : 19
+%	Members : Yuxuan Xie 				        (yx2284)
+%             Xusheng Gao 				        (xg2193)
+%		      Zachary Hideichi Watanabe-Gastel	(zhw2102)
+%
+%	Homework Assignment 5
+%	Using the iRobot Create Matlab Simulator and the iRobot Create
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function hw5_team_19_part2( serPort )
     global time_step
     turn_velocity = 0.075;

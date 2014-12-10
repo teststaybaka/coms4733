@@ -1,3 +1,16 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMS 4733 - Computational Aspect of Robotics
+%
+%	Columbia University FALL 2014 
+%
+%	Team    : 19
+%	Members : Yuxuan Xie 				        (yx2284)
+%             Xusheng Gao 				        (xg2193)
+%		      Zachary Hideichi Watanabe-Gastel	(zhw2102)
+%
+%	Homework Assignment 5
+%	Using the iRobot Create Matlab Simulator and the iRobot Create
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function hw5_team_19_part1( serPort )
     turn_velocity = 0.05;
     time_step = 0.1;
@@ -60,11 +73,13 @@ function hw5_team_19_part1( serPort )
         ch = uint32(ch);
         cw = uint32(cw);
 
-        smim(ch, cw, :) = [0,0,0];
-        smim(ch, cw-1, :) = [0,0,0];
-        smim(ch-1, cw, :) = [0,0,0];
-        smim(ch, cw+1, :) = [0,0,0];
-        smim(ch+1, cw, :) = [0,0,0];
+        if ch > 1 && ch < size(im, 1) && cw > 1 && cw < size(im, 2)
+            smim(ch, cw, :) = [0,0,0];
+            smim(ch, cw-1, :) = [0,0,0];
+            smim(ch-1, cw, :) = [0,0,0];
+            smim(ch, cw+1, :) = [0,0,0];
+            smim(ch+1, cw, :) = [0,0,0];
+        end
         figure(5)
         imshow(uint8(smim));
         
